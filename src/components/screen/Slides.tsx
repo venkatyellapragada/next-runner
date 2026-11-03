@@ -28,6 +28,8 @@ export type ScreenProps = {
   photos: Record<string, string>;
   joinUrl: string;
   offline?: boolean;
+  /** Static rendering for the PDF: no running clock, countdowns become times. */
+  print?: boolean;
 };
 
 const range = (s: Slot) => `${s.start}–${s.end}`;
@@ -70,7 +72,7 @@ function SlideBody(p: ScreenProps) {
 }
 
 // ── Header ────────────────────────────────────────────────────────────────
-function Header({ state, now, joinUrl }: ScreenProps) {
+function Header({ state, now, joinUrl, print }: ScreenProps) {
   const cur = activeSlot(state, now);
   const next = slotNext(cur?.id);
   return (
@@ -101,7 +103,7 @@ function Header({ state, now, joinUrl }: ScreenProps) {
           <br />a question
         </div>
         <QR value={joinUrl} size={92} />
-        <div className="hdr-clock">{fmtClock(now)}</div>
+        <div className="hdr-clock">{print ? '' : fmtClock(now)}</div>
       </div>
     </header>
   );
@@ -126,8 +128,15 @@ function DayStrip({ now }: { now: number }) {
 }
 
 // ── Countdown block, shared by transition, holding and break ─────────────
-function Countdown({ target, label, now, size = 200 }: { target: number; label: string; now: number; size?: number }) {
+function Countdown({ target, label, now, size = 200, print }: { target: number; label: string; now: number; size?: number; print?: boolean }) {
   const ms = target - now;
+  if (print)
+    return (
+      <div>
+        <p className="eyebrow" style={{ marginBottom: 24 }}>{label.startsWith('We resume') ? 'We resume at' : 'Starts at'}</p>
+        <div className="count" style={{ fontSize: size }}>{fmtClock(target)}</div>
+      </div>
+    );
   if (ms <= 0) {
     return (
       <div>
@@ -179,7 +188,7 @@ function SpeakerLine({ ids, photos }: { ids: string[]; photos: Record<string, st
 }
 
 // ── Holding: registrations, the opening screen ───────────────────────────
-function Holding({ slot, now, joinUrl }: ScreenProps & { slot: Slot }) {
+function Holding({ slot, now, joinUrl, print }: ScreenProps & { slot: Slot }) {
   // "New Education eXperience and Transformation": one line per letter of NEXT, the letter in indigo.
   const lines = event.expansion.replace(' and ', '\u00a0and ').split(' ');
   const begins = slotNext(slot.id);
@@ -213,14 +222,14 @@ function Holding({ slot, now, joinUrl }: ScreenProps & { slot: Slot }) {
           <p className="body" style={{ marginTop: 24 }}>Agenda, speakers and questions on your phone.</p>
           <p className="meta muted" style={{ marginTop: 12 }}>{shortUrl(joinUrl)}</p>
         </div>
-        {begins && <Countdown target={slotWindow(begins, now).start} label="Programme begins in" now={now} size={160} />}
+        {begins && <Countdown target={slotWindow(begins, now).start} label="Programme begins in" now={now} size={160} print={print} />}
       </div>
     </div>
   );
 }
 
 // ── Transition: what is next, who, countdown ─────────────────────────────
-function Transition({ slot, now, photos }: ScreenProps & { slot: Slot }) {
+function Transition({ slot, now, photos, print }: ScreenProps & { slot: Slot }) {
   const ids = slot.kind === 'panel' ? [] : slot.speakers ?? [];
   return (
     <div className="cols">
@@ -236,7 +245,7 @@ function Transition({ slot, now, photos }: ScreenProps & { slot: Slot }) {
             <p className="eyebrow" style={{ marginBottom: 24 }}>Moderator</p>
             <SpeakerLine ids={[slot.moderator]} photos={photos} />
             <p className="body muted" style={{ marginTop: 32 }}>
-              With {slot.speakers?.length ?? 0} leaders from universities across Telangana and Andhra Pradesh
+              With eight university leaders from Telangana and Andhra Pradesh
             </p>
           </div>
         ) : ids.length ? (
@@ -247,7 +256,7 @@ function Transition({ slot, now, photos }: ScreenProps & { slot: Slot }) {
       </div>
       <div className="vrule" />
       <div style={{ width: 520, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-        <Countdown target={slotWindow(slot, now).start} label="Starts in" now={now} />
+        <Countdown target={slotWindow(slot, now).start} label="Starts in" now={now} print={print} />
       </div>
     </div>
   );
@@ -267,9 +276,11 @@ function Speaker(p: ScreenProps & { slot: Slot }) {
         <div>
           <p className="eyebrow" style={{ marginBottom: 32 }}>{slot.label} · {range(slot)}</p>
           <h1 className="hero">{s.name}</h1>
-          <p className="h2 muted" style={{ marginTop: 20 }}>{s.title}</p>
-          <p className="h2 muted">{s.org}</p>
+          {[s.title, s.org].filter(Boolean).map((line, i) => (
+            <p key={line} className="h2 muted" style={{ marginTop: i ? 0 : 20 }}>{line}</p>
+          ))}
         </div>
+        {(slot.title !== slot.label || topics.length > 0) && (
         <div>
           <div style={{ height: 1, background: 'var(--line)', margin: '48px 0 40px' }} />
           {slot.title !== slot.label && <p className="h1" style={{ fontSize: 60 }}>{slot.title}</p>}
@@ -282,6 +293,7 @@ function Speaker(p: ScreenProps & { slot: Slot }) {
             </div>
           )}
         </div>
+        )}
       </div>
     </div>
   );
@@ -330,7 +342,7 @@ function Panel({ slot, photos }: ScreenProps & { slot: Slot }) {
 }
 
 // ── Break / lunch / high tea ─────────────────────────────────────────────
-function Break({ slot, state, now, joinUrl }: ScreenProps & { slot: Slot }) {
+function Break({ slot, state, now, joinUrl, print }: ScreenProps & { slot: Slot }) {
   const next = slotNext(slot.id);
   const timed = state.timer.endsAt && state.timer.endsAt > now - 60000;
   const target = timed ? state.timer.endsAt! : next ? slotWindow(next, now).start : slotWindow(slot, now).end;
@@ -357,7 +369,7 @@ function Break({ slot, state, now, joinUrl }: ScreenProps & { slot: Slot }) {
           <QR value={joinUrl} size={200} />
           <p className="meta muted">Agenda, speakers and the pulse poll on your phone</p>
         </div>
-        <Countdown target={target} label={(timed && state.timer.label) || 'We resume in'} now={now} />
+        <Countdown target={target} label={(timed && state.timer.label) || 'We resume in'} now={now} print={print} />
       </div>
     </div>
   );

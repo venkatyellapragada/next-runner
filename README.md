@@ -54,6 +54,12 @@ npm run export:pdf       # needs the app running (dev or local); writes exports/
 npx vercel --prod        # deploy
 ```
 
+## Deploy (once)
+1. Push this repo to GitHub and import it in Vercel (or link it with `npx vercel link`). Framework: Next.js, no settings to change.
+2. Vercel project → *Storage* → *Create* → **Upstash Redis** (Marketplace, free plan) → connect it to the project. This adds `KV_REST_API_URL` and `KV_REST_API_TOKEN`.
+3. Vercel project → *Settings* → *Environment Variables* → `CONTROL_PIN` (production).
+4. Redeploy. /control's status line must read "shared store"; "in-memory store" means step 2 is missing, and the three surfaces will not share state on Vercel.
+
 ## Environment
 | Variable | Needed | Notes |
 |---|---|---|

@@ -1,0 +1,9 @@
+@page { size: 1920px 1080px; margin: 0; }
+.print-root { background: #e5e7eb; }
+.print-page { width: 1920px; height: 1080px; overflow: hidden; break-after: page; margin: 0 auto 24px; }
+.print-page .slide-enter { animation: none; }
+@media print {
+  .print-root { background: none; }
+  .print-page { margin: 0; }
+}
+.print-page:last-child { break-after: auto; }
