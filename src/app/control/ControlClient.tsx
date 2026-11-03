@@ -9,7 +9,7 @@ import type { Action } from '@/lib/state';
 import './control.css';
 
 type Q = { id: string; text: string; name: string; role: string; org: string; ts: number; status: string };
-type Health = { store: 'redis' | 'memory'; defaultPin: boolean };
+type Health = { store: 'redis' | 'memory'; writable: boolean; defaultPin: boolean };
 
 export default function ControlClient({ photos }: { photos: Record<string, string> }) {
   const [pin, setPinState] = useState('');
@@ -96,6 +96,7 @@ function Console({ pin, health, photos, onLock }: { pin: string; health: Health;
         <div className="ctl-status">
           <span className={`dot ${online ? 'ok' : 'bad'}`} />
           {online ? 'Live' : 'Offline: retrying'} · {health.store === 'redis' ? 'shared store' : 'in-memory store (single machine only)'}
+          {!health.writable && <strong className="warn"> · store not accepting writes</strong>}
           {health.defaultPin && <strong className="warn"> · default PIN 0000</strong>}
         </div>
         <button className="link" onClick={onLock}>Lock</button>

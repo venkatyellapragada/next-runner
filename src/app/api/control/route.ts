@@ -4,10 +4,16 @@ import { K, redis, storeKind } from '@/lib/store';
 
 export const dynamic = 'force-dynamic';
 
-/** PIN check plus a health line for /control. */
+/** PIN check plus a health line for /control: proves the store takes a write and reads it back. */
 export async function GET(req: Request) {
   if (!authorised(req)) return json({ ok: false }, { status: 401 });
-  return json({ ok: true, store: storeKind, defaultPin });
+  let writable = false;
+  try {
+    const stamp = String(Date.now());
+    await redis('SET', K.health, stamp, 'EX', 300);
+    writable = (await redis<string | null>('GET', K.health)) === stamp;
+  } catch {}
+  return json({ ok: true, store: storeKind, writable, defaultPin });
 }
 
 export async function POST(req: Request) {

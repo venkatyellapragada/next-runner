@@ -15,6 +15,7 @@ export const K = {
   votes: PREFIX + 'votes', // hash optionIndex → count
   voters: PREFIX + 'voters', // set of device ids
   feedback: PREFIX + 'feedback', // list of JSON
+  health: PREFIX + 'health', // written by the /control health check
   cooldown: (device: string) => PREFIX + 'cool:' + device,
 };
 
