@@ -51,7 +51,7 @@ const perSlot: Record<SlotKind, SlideKind[]> = {
 };
 const slideName: Record<SlideKind, string> = {
   holding: 'Holding',
-  transition: 'Up next',
+  transition: 'Intro',
   speaker: 'Speaker',
   panel: 'Panel',
   break: 'Break',
