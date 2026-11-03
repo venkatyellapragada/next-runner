@@ -1,6 +1,6 @@
 // The live state: one small JSON document. Every change goes through `reduce`, and `v`
 // increments on every change so /screen can tell a new command from an old one.
-import { FIRST_SLIDE, slideById, slideIndex, slides } from './event';
+import { clockSlot, FIRST_SLIDE, slideById, slideIndex, slides, slotById, type Slot } from './event';
 
 export type ShownQuestion = { id: string; text: string; name?: string; role?: string; org?: string };
 export type LiveState = {
@@ -105,3 +105,9 @@ export type StatePayload = {
   /** Votes per option index; only present while the poll is open or on screen. */
   votes?: number[];
 };
+
+/** The slot the room is in: the current slide's, else the one we left for poll/questions, else the clock's. */
+export function activeSlot(state: LiveState, now: number): Slot | undefined {
+  return slotById(slideById(state.slideId)?.slotId) ?? slotById(slideById(state.returnTo)?.slotId) ?? clockSlot(now);
+}
+

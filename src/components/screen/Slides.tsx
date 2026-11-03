@@ -2,13 +2,11 @@
 // code renders live on /screen and statically on /print.
 import {
   agenda,
-  clockSlot,
   event,
   fmtClock,
   fmtCountdown,
   person,
   poll,
-  slideById,
   slotById,
   slotNext,
   slotProgress,
@@ -16,7 +14,8 @@ import {
   type Slide,
   type Slot,
 } from '@/lib/event';
-import type { LiveState } from '@/lib/state';
+import { activeSlot, type LiveState } from '@/lib/state';
+export { activeSlot };
 import { Logo } from '../Logo';
 import { Avatar, QR, shortUrl } from '../bits';
 import './screen.css';
@@ -32,11 +31,6 @@ export type ScreenProps = {
 };
 
 const range = (s: Slot) => `${s.start}–${s.end}`;
-
-/** The slot the room is in: the current slide's, else the one we left for poll/questions, else the clock's. */
-export function activeSlot(state: LiveState, now: number): Slot | undefined {
-  return slotById(slideById(state.slideId)?.slotId) ?? slotById(slideById(state.returnTo)?.slotId) ?? clockSlot(now);
-}
 
 export function Screen(p: ScreenProps) {
   const notice = p.state.notice.trim();
