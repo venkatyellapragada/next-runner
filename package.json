@@ -1,0 +1,28 @@
+{
+  "name": "next-1-runner",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "local": "next build && next start -H 0.0.0.0 -p 3000",
+    "typecheck": "tsc --noEmit",
+    "export:pdf": "node scripts/export-pdf.mjs"
+  },
+  "dependencies": {
+    "next": "16.4.3",
+    "qrcode": "1.5.4",
+    "react": "19.2.0",
+    "react-dom": "19.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "22.15.0",
+    "@types/qrcode": "1.5.5",
+    "@types/react": "19.2.0",
+    "@types/react-dom": "19.2.0",
+    "playwright-core": "1.56.0",
+    "typescript": "5.9.3"
+  },
+  "engines": { "node": ">=20" }
+}

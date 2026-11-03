@@ -1,0 +1,51 @@
+/* /screen type roles on the 1920×1080 stage (DESIGN.md → Type). */
+.stage {
+  position: relative;
+  width: 1920px;
+  height: 1080px;
+  overflow: hidden;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--text);
+}
+.stage .hero { font-family: var(--display); font-weight: 500; font-size: 104px; line-height: 1.02; letter-spacing: -0.03em; margin: 0; }
+.stage .h1 { font-family: var(--display); font-weight: 500; font-size: 72px; line-height: 1.08; letter-spacing: -0.025em; margin: 0; }
+.stage .h2 { font-family: var(--display); font-weight: 500; font-size: 48px; line-height: 1.2; letter-spacing: -0.02em; margin: 0; }
+.stage .body { font-family: var(--text); font-weight: 400; font-size: 36px; line-height: 1.35; letter-spacing: -0.01em; margin: 0; }
+.stage .meta { font-family: var(--display); font-weight: 500; font-size: 28px; line-height: 1.3; margin: 0; }
+.stage .eyebrow { font-size: 24px; line-height: 1; margin: 0; }
+.stage .muted { color: var(--ink-2); }
+.stage .count { font-family: var(--display); font-weight: 500; font-size: 200px; line-height: 1; letter-spacing: -0.04em; color: var(--brand); font-variant-numeric: tabular-nums; }
+.stage .clamp2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.stage .clamp1 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Header */
+.hdr { position: absolute; inset: 0 0 auto 0; height: 120px; padding: 0 112px; display: flex; align-items: center; gap: 48px; }
+.hdr-brand { display: flex; align-items: center; gap: 24px; flex: none; }
+.hdr-name { font-family: var(--display); font-weight: 700; font-size: 40px; letter-spacing: -0.02em; }
+.hdr-rule { width: 1px; height: 40px; background: var(--line); }
+.hdr-track { flex: 1; display: grid; grid-template-columns: 1.25fr 1fr; gap: 48px; min-width: 0; }
+.hdr-slot { min-width: 0; }
+.hdr-slot .eyebrow { font-size: 20px; margin-bottom: 10px; }
+.hdr-slot .title { font-family: var(--display); font-weight: 500; font-size: 30px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hdr-bar { margin-top: 10px; height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; }
+.hdr-bar > div { height: 100%; background: var(--brand); }
+.hdr-right { display: flex; align-items: center; gap: 28px; flex: none; }
+.hdr-scan { text-align: right; font-size: 20px; line-height: 1.35; color: var(--ink-2); font-weight: 600; }
+.hdr-clock { font-family: var(--display); font-weight: 500; font-size: 60px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; min-width: 160px; text-align: right; }
+
+/* Day strip: one segment per slot, positioned by time */
+.strip { position: absolute; top: 120px; left: 112px; right: 112px; height: 6px; }
+.strip > div { position: absolute; top: 0; height: 6px; background: var(--line); overflow: hidden; }
+.strip > div > div { height: 100%; background: var(--brand); }
+
+/* Slide body area */
+.body-area { position: absolute; top: 126px; left: 0; right: 0; bottom: 0; padding: 80px 112px 72px; }
+.body-area.with-notice { bottom: 88px; }
+.notice { position: absolute; left: 0; right: 0; bottom: 0; height: 88px; background: var(--brand); color: #fff; display: flex; align-items: center; padding: 0 112px; font-family: var(--display); font-weight: 500; font-size: 36px; letter-spacing: -0.01em; }
+
+.cols { display: flex; height: 100%; gap: 96px; }
+.vrule { width: 1px; background: var(--line); flex: none; }
+.bullet { display: flex; gap: 24px; align-items: baseline; }
+.bullet::before { content: ''; flex: none; width: 12px; height: 12px; background: var(--brand); transform: translateY(-6px); }
+.offline-dot { position: absolute; right: 12px; bottom: 12px; width: 12px; height: 12px; border-radius: 50%; background: var(--ink-3); }
