@@ -1,5 +1,4 @@
-import { poll } from '@/lib/event';
-import { authorised, loadVotes } from '@/lib/server';
+import { allPolls, authorised, loadVotes } from '@/lib/server';
 import { hgetall, K, redis } from '@/lib/store';
 
 export const dynamic = 'force-dynamic';
@@ -30,8 +29,11 @@ export async function GET(req: Request) {
       }),
     );
   } else if (type === 'poll') {
-    const votes = await loadVotes();
-    rows = [['option', 'votes'] as unknown[]].concat(poll.options.map((o, i) => [o, votes[i]]));
+    rows = [['poll', 'option', 'votes'] as unknown[]];
+    for (const p of await allPolls()) {
+      const votes = await loadVotes(p);
+      p.options.forEach((o, i) => rows.push([p.question, o, votes[i]]));
+    }
   } else return new Response('type must be questions, feedback or poll', { status: 400 });
   return new Response('﻿' + csv(rows), {
     headers: {

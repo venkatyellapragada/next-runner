@@ -1,4 +1,4 @@
-import { authorised, defaultPin, json, loadState, payload, saveState } from '@/lib/server';
+import { allPolls, authorised, defaultPin, json, loadState, payload, saveState } from '@/lib/server';
 import { reduce, type Action } from '@/lib/state';
 import { K, redis, storeKind } from '@/lib/store';
 
@@ -21,9 +21,11 @@ export async function POST(req: Request) {
   const action = (await req.json()) as Action | { type: 'wipe-audience' } | { type: 'wipe-votes' };
   try {
     if (action.type === 'wipe-votes') {
-      await redis('DEL', K.votes, K.voters);
+      const id = (await loadState()).poll.id;
+      await redis('DEL', K.votes(id), K.voters(id));
     } else if (action.type === 'wipe-audience') {
-      await redis('DEL', K.votes, K.voters, K.questions, K.qstatus, K.feedback);
+      const ids = (await allPolls()).map((p) => p.id);
+      await redis('DEL', K.questions, K.qstatus, K.feedback, ...ids.flatMap((id) => [K.votes(id), K.voters(id)]));
     } else {
       const next = reduce(await loadState(), action, Date.now());
       await saveState(next);

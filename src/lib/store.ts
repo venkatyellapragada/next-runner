@@ -12,8 +12,9 @@ export const K = {
   state: PREFIX + 'state',
   questions: PREFIX + 'questions', // list of JSON
   qstatus: PREFIX + 'qstatus', // hash id → new | shown | answered | hidden
-  votes: PREFIX + 'votes', // hash optionIndex → count
-  voters: PREFIX + 'voters', // set of device ids
+  votes: (poll: string) => PREFIX + 'votes:' + poll, // hash optionIndex → count
+  voters: (poll: string) => PREFIX + 'voters:' + poll, // set of device ids
+  customPolls: PREFIX + 'polls', // list of JSON polls added from /control
   feedback: PREFIX + 'feedback', // list of JSON
   health: PREFIX + 'health', // written by the /control health check
   cooldown: (device: string) => PREFIX + 'cool:' + device,

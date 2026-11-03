@@ -29,9 +29,11 @@ Day-of instructions: **RUNBOOK.md**. Look and feel: **DESIGN.md**.
   (plus one PNG per slide). A copy is committed.
 
 ## Data model
-- `content/event.json` — event, people, agenda slots, poll, feedback options, deck links. Edit and redeploy.
-- Live state (Redis key `next1:state`): `{ v, slideId, returnTo, poll: {open}, questions: [shown],
-  timer: {endsAt, label}, notice, feedbackOpen }`. `v` increments on every change.
+- `content/event.json` — event, people, agenda slots, polls, roles, interludes, deck links. Edit and redeploy.
+- Live state (Redis key `next1:state`): `{ v, slideId, returnTo, poll: {id, open}, questions: [shown],
+  timer: {endsAt, label}, notice, feedbackOpen, overlay }`. `v` increments on every change.
+- Polls: `polls` in `content/event.json`, plus polls added from /control (Redis `next1:polls`). Votes per poll in
+  `next1:votes:<id>`, one per device (`next1:voters:<id>`).
 - Audience data (Redis): questions list plus a status per question, poll votes hash plus a
   voter set, feedback list. Exported as CSV from /control.
 

@@ -65,3 +65,8 @@
 .stage.brand .foot .bar { background: rgba(255, 255, 255, 0.3); }
 .stage.brand .foot .bar > div { background: #fff; }
 .stage.brand .qr-tile { border-color: transparent; }
+
+/* Running break timer, on slides that do not already show it large */
+.timer-chip { display: inline-flex; align-items: baseline; gap: 14px; padding: 10px 18px; border-radius: 999px; background: var(--brand-gradient); color: #fff; }
+.timer-chip .eyebrow { color: rgba(255, 255, 255, 0.86); font-size: 18px; }
+.timer-chip b { font-size: 34px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }

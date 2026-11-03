@@ -109,16 +109,23 @@
     }
   ],
 
-  "poll": {
-    "question": "Where will AI make the biggest difference on your campus in the next two years?",
-    "options": [
-      "Teaching and learning content",
-      "Examinations and evaluation",
-      "Accreditation and IQAC",
-      "Student support and success",
-      "Administration and operations"
-    ]
-  },
+  "polls": [
+    {
+      "id": "ai-impact",
+      "question": "Where will AI make the biggest difference on your campus in the next two years?",
+      "options": ["Teaching and learning content", "Examinations and evaluation", "Accreditation and IQAC", "Student support and success", "Administration and operations"]
+    },
+    {
+      "id": "data-readiness",
+      "question": "How ready is your institution's data for AI today?",
+      "options": ["One connected system", "A few systems, partly connected", "Many systems, mostly separate", "Largely on paper and spreadsheets"]
+    },
+    {
+      "id": "faculty-control",
+      "question": "In AI-assisted evaluation, where must the faculty stay in control?",
+      "options": ["Setting the rubric", "Confirming every mark", "Reviewing only disputed scripts", "Moderating a sample"]
+    }
+  ],
 
   "roles": [
     "Vice Chancellor", "Pro Vice Chancellor", "Registrar", "Dean", "Controller of Examinations",

@@ -41,9 +41,14 @@ simulation: **T** opens the guided tours, **1–8** plays one, **A** plays all e
 
 ## Running the day
 - **Each session:** after the previous one ends, tap **Next** → *Intro* slide (title, speaker, countdown to start). When the speaker walks up, **Next** → *Speaker* slide. The AV desk then switches to the speaker's PowerPoint and back to this window when they finish.
-- **Breaks, lunch, high tea:** **Next** lands on the holding screen with a countdown to the restart. Running late? *Break timer* → 5/10/15 min, or type minutes. *Clear* returns to the schedule.
+- **Breaks, lunch, high tea:** **Next** lands on the holding screen with a countdown to the restart.
+- **Timer:** /control → *Timer*: pick a label (*We resume in*, *Starting in*, *Lunch ends in*, *Session ends in*), then 2/5/10/15/30 min or type minutes and *Start timer*. It counts down on every slide: as the big number on intro, break and opening slides, as a pill at the top on the others. *Stop timer* returns to the schedule; it also clears itself a minute after it ends.
 - **Announcements:** *Notice band* → pick a preset or type one → Show. Clear it after a minute.
-- **Pulse poll:** *Open voting* (suggested: at the end of Keynote 1). *Show results on screen* whenever you like, *Back to agenda* returns to where you were. *Close voting* freezes the result.
+- **Polls:** /control → *Polls* lists them all. One is **current**: phones answer it while voting is open, and the results slide shows it.
+  - *Make current* on another poll switches to it (voting closes, so nobody answers the new question by accident), then *Open voting*.
+  - *Show results on screen* whenever you like; *Back to agenda* returns to where you were. *Close voting* freezes the result.
+  - *Add a poll* during the day: a question and 2–6 options, one per line. It becomes current; open voting when ready. Polls added this way can be removed; the ones in `content/event.json` stay.
+  - Each phone can vote once per poll. *Clear votes* clears only the current poll.
 - **Open Forum (15:30):** questions arrive under *Questions*, newest first. Nothing reaches the screen until you tap **Put on screen**. The first one is shown large, up to three more as the queue. **Answered** removes it. **Hide** removes an unsuitable one from your list. Questions can also be shown during any session: *Questions* button at the top.
 - **Feedback:** *Open feedback now* at the start of Keynote 4 (16:20). It moves the form to the top of everyone's audience page.
 - **Wrong slide:** tap any slide in *Running order*.

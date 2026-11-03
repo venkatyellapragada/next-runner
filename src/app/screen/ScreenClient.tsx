@@ -90,6 +90,7 @@ export default function ScreenClient({ photos }: { photos: Record<string, string
             state={{ ...state, overlay: null }}
             now={now}
             votes={live?.votes}
+            pollDef={live?.pollDef}
             photos={photos}
             joinUrl={joinUrlFor(origin)}
             offline={!online}

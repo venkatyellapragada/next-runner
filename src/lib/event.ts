@@ -15,6 +15,7 @@ export type Slot = {
   moderator?: string;
   topics?: string[];
 };
+export type Poll = { id: string; question: string; options: string[]; custom?: boolean };
 export type DeckLink = { slot?: string; title: string; url: string };
 export type EventData = {
   event: {
@@ -29,7 +30,7 @@ export type EventData = {
   };
   people: Record<string, Person>;
   agenda: Slot[];
-  poll: { question: string; options: string[] };
+  polls: Poll[];
   roles: string[];
   decks: { note: string; links: DeckLink[] };
   interludes: {
@@ -39,7 +40,9 @@ export type EventData = {
 };
 
 export const data = raw as EventData;
-export const { event, people, agenda, poll } = data;
+export const { event, people, agenda } = data;
+/** Polls written in content/event.json. More can be added live from /control (stored with the votes). */
+export const seedPolls: Poll[] = data.polls;
 
 // ── Slides ────────────────────────────────────────────────────────────────
 // Derived from the agenda. The order here is the order "Next" walks through.

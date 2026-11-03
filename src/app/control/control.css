@@ -68,3 +68,14 @@ input.grow { flex: 1; min-width: 180px; min-height: 48px; padding: 8px 10px; bor
 .interludes .btn.on { background: var(--brand-gradient); border-color: transparent; color: #fff; }
 .interludes .btn.primary { background: var(--paper); border-color: var(--indigo); color: var(--indigo); }
 input.num, input.grow { background: #fff; border-color: #d6d4cc; }
+
+.ctl-polls { list-style: none; margin: 0 0 12px; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.ctl-polls > li { border: 1px solid var(--rule); border-radius: 10px; padding: 12px; background: #fff; }
+.ctl-polls > li.cur { border-color: var(--indigo); box-shadow: inset 3px 0 0 var(--indigo); }
+.ctl-poll-head { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+.ctl-tag { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--indigo); flex: none; }
+.ctl-add { display: flex; flex-direction: column; gap: 6px; border: 1px solid var(--rule); border-radius: 10px; padding: 12px; background: var(--bg-2); }
+.ctl-add label { font-weight: 600; font-size: 14px; margin-top: 4px; }
+.ctl-add textarea { min-height: 110px; padding: 8px 10px; border: 1px solid var(--rule); border-radius: 6px; background: #fff; }
+.ctl-running { font-size: 18px; margin: 4px 0 10px; }
+.ctl-running b { font-variant-numeric: tabular-nums; color: var(--indigo); }

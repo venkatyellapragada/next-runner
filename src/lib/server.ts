@@ -1,7 +1,7 @@
 // Server-side helpers shared by the API routes.
 import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { poll } from './event';
+import { seedPolls, type Poll } from './event';
 import { initialState, type LiveState, type StatePayload } from './state';
 import { hgetall, K, redis } from './store';
 
@@ -17,21 +17,36 @@ export function authorised(req: Request): boolean {
 export async function loadState(): Promise<LiveState> {
   const raw = await redis<string | null>('GET', K.state);
   if (!raw) return initialState;
-  return { ...initialState, ...(JSON.parse(raw) as LiveState) };
+  const saved = JSON.parse(raw) as LiveState;
+  // State saved before polls had ids keeps working.
+  return { ...initialState, ...saved, poll: { ...initialState.poll, ...(saved.poll ?? {}) } };
 }
 export async function saveState(s: LiveState): Promise<void> {
   await redis('SET', K.state, JSON.stringify(s));
 }
 
-export async function loadVotes(): Promise<number[]> {
-  const h = await hgetall(K.votes);
-  return poll.options.map((_, i) => Number(h[String(i)] ?? 0));
+/** Every poll: the ones in content/event.json, then the ones added from /control. */
+export async function allPolls(): Promise<Poll[]> {
+  const custom = (await redis<string[]>('LRANGE', K.customPolls, 0, -1)).map((j) => ({ ...(JSON.parse(j) as Poll), custom: true }));
+  return [...seedPolls, ...custom];
+}
+export async function findPoll(id: string): Promise<Poll | undefined> {
+  return (await allPolls()).find((p) => p.id === id);
+}
+
+export async function loadVotes(p: Poll): Promise<number[]> {
+  const h = await hgetall(K.votes(p.id));
+  return p.options.map((_, i) => Number(h[String(i)] ?? 0));
 }
 
 export async function payload(): Promise<StatePayload> {
   const state = await loadState();
   const out: StatePayload = { state, now: Date.now() };
-  if (state.poll.open || state.slideId === 'poll') out.votes = await loadVotes();
+  const def = (await findPoll(state.poll.id)) ?? seedPolls[0];
+  if (def) {
+    out.pollDef = def;
+    if (state.poll.open || state.slideId === 'poll') out.votes = await loadVotes(def);
+  }
   return out;
 }
 

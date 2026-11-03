@@ -1,6 +1,6 @@
 // The live state: one small JSON document. Every change goes through `reduce`, and `v`
 // increments on every change so /screen can tell a new command from an old one.
-import { clockSlot, FIRST_SLIDE, slideById, slideIndex, slides, slotById, type Slot } from './event';
+import { clockSlot, FIRST_SLIDE, seedPolls, slideById, slideIndex, slides, slotById, type Poll, type Slot } from './event';
 
 export type Overlay = 'video' | 'sim' | null;
 export type ShownQuestion = { id: string; text: string; name?: string; role?: string; org?: string };
@@ -9,7 +9,8 @@ export type LiveState = {
   slideId: string;
   /** Where to go back to after poll results or questions were put up out of order. */
   returnTo: string | null;
-  poll: { open: boolean };
+  /** The current poll (one at a time): the one phones answer and the results slide shows. */
+  poll: { id: string; open: boolean };
   /** Questions picked on /control, in the order they appear on screen. The first is "now". */
   questions: ShownQuestion[];
   /** A break countdown started from /control; overrides the scheduled end on holding screens. */
@@ -26,7 +27,7 @@ export const initialState: LiveState = {
   v: 0,
   slideId: FIRST_SLIDE,
   returnTo: null,
-  poll: { open: false },
+  poll: { id: seedPolls[0]?.id ?? '', open: false },
   questions: [],
   timer: { endsAt: null, label: '' },
   notice: '',
@@ -42,6 +43,7 @@ export type Action =
   | { type: 'show'; slideId: 'poll' | 'questions' }
   | { type: 'back' }
   | { type: 'poll'; open: boolean }
+  | { type: 'poll-select'; id: string }
   | { type: 'q-show'; q: ShownQuestion }
   | { type: 'q-unshow'; id: string }
   | { type: 'q-first'; id: string }
@@ -83,7 +85,10 @@ export function reduce(s: LiveState, a: Action, now: number): LiveState {
     case 'back':
       return { ...n, slideId: inOrder(s.returnTo ?? s.slideId), returnTo: null };
     case 'poll':
-      return { ...n, poll: { open: a.open } };
+      return { ...n, poll: { ...s.poll, open: a.open } };
+    case 'poll-select':
+      // Switching polls closes voting, so nobody answers the new question by accident.
+      return s.poll.id === a.id ? s : { ...n, poll: { id: a.id, open: false } };
     case 'q-show':
       if (s.questions.some((q) => q.id === a.q.id)) return s;
       return { ...n, questions: [...s.questions, a.q].slice(-MAX_SHOWN) };
@@ -112,7 +117,9 @@ export function reduce(s: LiveState, a: Action, now: number): LiveState {
 export type StatePayload = {
   state: LiveState;
   now: number;
-  /** Votes per option index; only present while the poll is open or on screen. */
+  /** The current poll's question and options. */
+  pollDef?: Poll;
+  /** Votes per option index of the current poll; present while it is open or on screen. */
   votes?: number[];
 };
 
@@ -121,3 +128,8 @@ export function activeSlot(state: LiveState, now: number): Slot | undefined {
   return slotById(slideById(state.slideId)?.slotId) ?? slotById(slideById(state.returnTo)?.slotId) ?? clockSlot(now);
 }
 
+
+/** A break timer counts until a minute after it ends, then lets the schedule take over again. */
+export function timerActive(s: LiveState, now: number): boolean {
+  return !!s.timer.endsAt && s.timer.endsAt > now - 60000;
+}

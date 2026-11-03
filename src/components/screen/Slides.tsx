@@ -6,16 +6,17 @@ import {
   fmtClock,
   fmtCountdown,
   person,
-  poll,
+  seedPolls,
   slotById,
   slotNext,
   slotProgress,
   slotWindow,
   type Slide,
   type SlideKind,
+  type Poll as PollDef,
   type Slot,
 } from '@/lib/event';
-import { activeSlot, type LiveState } from '@/lib/state';
+import { activeSlot, timerActive, type LiveState } from '@/lib/state';
 import { Avatar } from '../Avatar';
 import { Logo } from '../Logo';
 import { NextMark } from '../NextMark';
@@ -29,6 +30,8 @@ export type ScreenProps = {
   state: LiveState;
   now: number;
   votes?: number[];
+  /** The current poll; the first in content/event.json when not given. */
+  pollDef?: PollDef;
   photos: Record<string, string>;
   joinUrl: string;
   offline?: boolean;
@@ -79,11 +82,21 @@ function InterludeCard({ kind }: { kind: 'video' | 'sim' }) {
 }
 
 // ── Frame ────────────────────────────────────────────────────────────────
-function Top({ now, print }: ScreenProps) {
+// Slides that already show the timer as their big number.
+const TIMER_SLIDES: SlideKind[] = ['holding', 'transition', 'break'];
+
+function Top({ now, print, state, slide }: ScreenProps) {
+  const chip = !print && timerActive(state, now) && !TIMER_SLIDES.includes(slide.kind);
   return (
     <div className="top">
       <Logo height={36} />
       <div className="meta">
+        {chip && (
+          <span className="timer-chip">
+            <span className="eyebrow">{state.timer.label || 'Timer'}</span>
+            <b>{state.timer.endsAt! > now ? fmtCountdown(state.timer.endsAt! - now) : 'Now'}</b>
+          </span>
+        )}
         <span className="eyebrow">Hyderabad · 05.11.2026</span>
         {!print && (
           <>
@@ -158,10 +171,11 @@ function Countdown({ target, label, now, print }: { target: number; label: strin
   } else {
     big = fmtCountdown(ms);
   }
+  const isClock = typeof big === 'string' && big.includes(':') && (print || ms > 60 * 60000);
   return (
     <div>
       <p className="eyebrow" style={{ marginBottom: 20 }}>{lab}</p>
-      <div className="hero-num">{big}</div>
+      <div className="hero-num" style={{ fontSize: isClock ? 200 : 240 }}>{big}</div>
     </div>
   );
 }
@@ -180,9 +194,10 @@ function PersonLine({ id, photos, size = 112 }: { id: string; photos: Record<str
 }
 
 // ── Holding: the cover, the one brand-gradient slide ─────────────────────
-function Holding({ slot, now, print }: ScreenProps & { slot: Slot }) {
+function Holding({ slot, now, print, state }: ScreenProps & { slot: Slot }) {
   const begins = slotNext(slot.id);
-  const start = begins ? slotWindow(begins, now).start : 0;
+  const timed = timerActive(state, now);
+  const start = timed ? state.timer.endsAt! : begins ? slotWindow(begins, now).start : 0;
   const ms = start - now;
   const when = print || ms > 60 * 60000 || ms <= 0 ? null : ms >= 10 * 60000 ? `${Math.ceil(ms / 60000)} min` : fmtCountdown(ms);
   return (
@@ -194,7 +209,7 @@ function Holding({ slot, now, print }: ScreenProps & { slot: Slot }) {
         <p className="eyebrow" style={{ marginTop: 28 }}>In partnership with Google Cloud</p>
       </div>
       <div style={{ textAlign: 'right', flex: 'none' }}>
-        <p className="eyebrow" style={{ marginBottom: 16 }}>{slot.title} open · programme begins {begins?.start}</p>
+        <p className="eyebrow" style={{ marginBottom: 16 }}>{timed ? state.timer.label || 'Starting in' : `${slot.title} open · programme begins ${begins?.start}`}</p>
         {when ? (
           <p className="display" style={{ fontSize: 160, fontVariantNumeric: 'tabular-nums' }}>{when}</p>
         ) : (
@@ -206,7 +221,7 @@ function Holding({ slot, now, print }: ScreenProps & { slot: Slot }) {
 }
 
 // ── Transition: what is next, who, countdown ─────────────────────────────
-function Transition({ slot, now, photos, print }: ScreenProps & { slot: Slot }) {
+function Transition({ slot, now, photos, print, state }: ScreenProps & { slot: Slot }) {
   const ids = slot.kind === 'panel' ? [] : slot.speakers ?? [];
   const size = slot.title.length <= 22 ? 128 : slot.title.length <= 36 ? 104 : 92;
   return (
@@ -232,8 +247,12 @@ function Transition({ slot, now, photos, print }: ScreenProps & { slot: Slot }) 
           <p className="heading accent" style={{ fontSize: 48 }}>{slot.byline}</p>
         ) : null}
       </div>
-      <div style={{ width: 500, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-        <Countdown target={slotWindow(slot, now).start} label="Starts in" now={now} print={print} />
+      <div style={{ flex: 'none', minWidth: 420, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'flex-end' }}>
+        {timerActive(state, now) && !print ? (
+          <Countdown target={state.timer.endsAt!} label={state.timer.label || 'Starts in'} now={now} />
+        ) : (
+          <Countdown target={slotWindow(slot, now).start} label="Starts in" now={now} print={print} />
+        )}
       </div>
     </div>
   );
@@ -318,7 +337,7 @@ function Panel({ slot, photos }: ScreenProps & { slot: Slot }) {
 // ── Break / lunch / high tea (tinted ground) ─────────────────────────────
 function Break({ slot, state, now, print }: ScreenProps & { slot: Slot }) {
   const next = slotNext(slot.id);
-  const timed = state.timer.endsAt && state.timer.endsAt > now - 60000;
+  const timed = timerActive(state, now);
   const target = timed ? state.timer.endsAt! : next ? slotWindow(next, now).start : slotWindow(slot, now).end;
   const nextWho = next?.speakers?.map((id) => person(id).name).join(', ') ?? next?.byline;
   return (
@@ -340,8 +359,8 @@ function Break({ slot, state, now, print }: ScreenProps & { slot: Slot }) {
           </div>
         )}
       </div>
-      <div style={{ width: 520, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-        <Countdown target={target} label={(timed && state.timer.label) || 'We resume in'} now={now} print={print} />
+      <div style={{ flex: 'none', minWidth: 420, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'flex-end' }}>
+        <Countdown target={target} label={(timed && state.timer.label) || 'We resume in'} now={now} print={print && !timed} />
       </div>
     </div>
   );
@@ -399,8 +418,9 @@ function Questions({ state, joinUrl, slot }: ScreenProps & { slot?: Slot }) {
 }
 
 // ── Poll results ─────────────────────────────────────────────────────────
-function Poll({ state, votes, joinUrl }: ScreenProps) {
-  const counts = votes ?? poll.options.map(() => 0);
+function Poll({ state, votes, joinUrl, pollDef }: ScreenProps) {
+  const poll = pollDef ?? seedPolls[0];
+  const counts = votes && votes.length === poll.options.length ? votes : poll.options.map(() => 0);
   const total = counts.reduce((a, b) => a + b, 0);
   const max = Math.max(...counts);
   return (

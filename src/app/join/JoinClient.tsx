@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { Avatar } from '@/components/Avatar';
 import { Logo } from '@/components/Logo';
 import { NextMark } from '@/components/NextMark';
-import { agenda, data, event, person, poll, slotProgress, slotWindow, talkSlots, type Slot } from '@/lib/event';
+import { agenda, data, event, person, slotProgress, slotWindow, talkSlots, type Poll, type Slot } from '@/lib/event';
 import { deviceId, useLive, useNow } from '@/lib/live';
 import { activeSlot } from '@/lib/state';
 import './join.css';
@@ -65,7 +65,7 @@ export default function JoinClient({ photos }: { photos: Record<string, string> 
               </button>
             )}
             {cur ? <NowCard slot={cur} now={now} photos={photos} /> : <p className="jn-muted">Loading the programme…</p>}
-            {state?.poll.open && <PollCard votes={live?.votes} />}
+            {state?.poll.open && live?.pollDef && <PollCard key={live.pollDef.id} poll={live.pollDef} votes={live.votes} />}
             <button className="jn-btn primary wide" onClick={() => go('ask')}>Ask a question</button>
             {cur && <NextUp slot={cur} />}
           </>
@@ -225,14 +225,16 @@ async function post(url: string, body: unknown): Promise<{ ok: boolean; error?: 
   }
 }
 
-function PollCard({ votes: liveVotes }: { votes?: number[] }) {
+function PollCard({ poll, votes: liveVotes }: { poll: Poll; votes?: number[] }) {
   const [voted, setVoted] = useState<number | null>(null);
   const [votes, setVotes] = useState<number[] | undefined>();
   const [err, setErr] = useState('');
+  const [sending, setSending] = useState(false);
+  // One vote per poll on this phone; a new poll starts fresh.
   useEffect(() => {
-    const v = remember('vote');
-    if (v) setVoted(Number(v));
-  }, []);
+    const v = remember('vote-' + poll.id);
+    setVoted(v ? Number(v) : null);
+  }, [poll.id]);
   const shown = votes ?? liveVotes;
   const total = shown?.reduce((a, b) => a + b, 0) ?? 0;
   return (
@@ -245,11 +247,15 @@ function PollCard({ votes: liveVotes }: { votes?: number[] }) {
             <button
               key={o}
               className="jn-btn"
+              disabled={sending}
               onClick={async () => {
-                const r = await post('/api/vote', { device: deviceId(), option: i });
+                setSending(true);
+                setErr('');
+                const r = await post('/api/vote', { device: deviceId(), pollId: poll.id, option: i });
+                setSending(false);
                 if (r.ok) {
                   setVoted(i);
-                  remember('vote', String(i));
+                  remember('vote-' + poll.id, String(i));
                   setVotes(r.votes);
                 } else setErr(r.error ?? 'Could not record your vote.');
               }}

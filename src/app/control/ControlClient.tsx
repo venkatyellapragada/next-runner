@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Fit } from '@/components/Fit';
 import { joinUrlFor } from '@/components/bits';
 import { Screen } from '@/components/screen/Slides';
-import { agenda, people, poll, slideById, slideIndex, slides } from '@/lib/event';
+import { agenda, people, slideById, slideIndex, slides, type Poll } from '@/lib/event';
 import { control, getPin, setPin, useLive, useNow } from '@/lib/live';
 import type { Action } from '@/lib/state';
 import './control.css';
@@ -84,7 +84,7 @@ function Console({ pin, health, photos, onLock }: { pin: string; health: Health;
   );
 
   if (!data) return <main className="ctl"><p className="ctl-muted">Connecting…</p></main>;
-  const { state, votes } = data;
+  const { state, votes, pollDef } = data;
   const slide = slideById(state.slideId)!;
   const i = slideIndex(state.slideId);
   const upNext = i >= 0 ? slides[i + 1] : slideById(state.returnTo);
@@ -106,7 +106,7 @@ function Console({ pin, health, photos, onLock }: { pin: string; health: Health;
       <section className="ctl-now">
         {origin && (
           <Fit style={{ width: '100%', aspectRatio: '16 / 9', border: '1px solid var(--line)', borderRadius: 4 }}>
-            {() => <Screen slide={slide} state={state} now={now} votes={votes} photos={photos} joinUrl={joinUrlFor(origin)} />}
+            {() => <Screen slide={slide} state={state} now={now} votes={votes} pollDef={pollDef} photos={photos} joinUrl={joinUrlFor(origin)} />}
           </Fit>
         )}
         <p className="ctl-onscreen">
@@ -168,9 +168,9 @@ function Console({ pin, health, photos, onLock }: { pin: string; health: Health;
         </ol>
       </Section>
 
-      <PollSection open={state.poll.open} votes={votes} send={send} />
+      <PollSection pin={pin} current={state.poll} onScreen={state.slideId === 'poll'} send={send} />
       <QuestionsSection pin={pin} shown={state.questions} send={send} />
-      <TimerSection endsAt={state.timer.endsAt} now={now} send={send} />
+      <TimerSection endsAt={state.timer.endsAt} label={state.timer.label} now={now} send={send} />
       <NoticeSection notice={state.notice} send={send} />
 
       <Section title="Feedback form">
@@ -197,26 +197,99 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 type Send = (a: Action | { type: 'wipe-votes' } | { type: 'wipe-audience' }) => Promise<void>;
 
-function PollSection({ open, votes, send }: { open: boolean; votes?: number[]; send: Send }) {
-  const total = votes?.reduce((a, b) => a + b, 0) ?? 0;
+type PollRow = Poll & { votes: number[] };
+
+function PollSection({ pin, current, onScreen, send }: { pin: string; current: { id: string; open: boolean }; onScreen: boolean; send: Send }) {
+  const [polls, setPolls] = useState<PollRow[]>([]);
+  const [adding, setAdding] = useState(false);
+  const [question, setQuestion] = useState('');
+  const [options, setOptions] = useState('');
+  const [err, setErr] = useState('');
+  const load = useCallback(async () => {
+    const res = await fetch('/api/polls', { headers: { 'x-pin': pin }, cache: 'no-store' }).catch(() => null);
+    if (res?.ok) setPolls((await res.json()).polls);
+  }, [pin]);
+  useEffect(() => {
+    load();
+    const t = setInterval(load, 3000);
+    return () => clearInterval(t);
+  }, [load]);
+
+  const add = async () => {
+    setErr('');
+    const res = await fetch('/api/polls', {
+      method: 'POST',
+      headers: { 'x-pin': pin, 'content-type': 'application/json' },
+      body: JSON.stringify({ question, options: options.split('\n') }),
+    });
+    const body = await res.json();
+    if (!body.ok) return setErr(body.error ?? 'Could not add the poll.');
+    setQuestion('');
+    setOptions('');
+    setAdding(false);
+    await load();
+    await send({ type: 'poll-select', id: body.poll.id });
+  };
+  const remove = async (id: string) => {
+    if (!confirm('Remove this poll and its votes?')) return;
+    await fetch(`/api/polls?id=${encodeURIComponent(id)}`, { method: 'DELETE', headers: { 'x-pin': pin } });
+    load();
+  };
+
   return (
-    <Section title="Pulse poll">
-      <p className="ctl-q">{poll.question}</p>
-      {votes && (
-        <ul className="ctl-votes">
-          {poll.options.map((o, i) => (
-            <li key={o}><span>{o}</span><b>{votes[i]}</b></li>
-          ))}
-          <li className="total"><span>Total</span><b>{total}</b></li>
-        </ul>
+    <Section title={`Polls (${polls.length})`}>
+      <p className="ctl-muted">One poll is current at a time: phones answer it while voting is open, and the results slide shows it. Picking another poll closes voting.</p>
+      <ul className="ctl-polls">
+        {polls.map((p) => {
+          const isCur = p.id === current.id;
+          const total = p.votes.reduce((a, b) => a + b, 0);
+          return (
+            <li key={p.id} className={isCur ? 'cur' : ''}>
+              <div className="ctl-poll-head">
+                <p className="ctl-q">{p.question}</p>
+                <span className="ctl-tag">{isCur ? (current.open ? 'Current · voting open' : 'Current') : `${total} votes`}</span>
+              </div>
+              {isCur ? (
+                <>
+                  <ul className="ctl-votes">
+                    {p.options.map((o, i) => (
+                      <li key={o}><span>{o}</span><b>{p.votes[i]}</b></li>
+                    ))}
+                    <li className="total"><span>Total</span><b>{total}</b></li>
+                  </ul>
+                  <div className="ctl-row">
+                    <button className={`btn ${current.open ? 'on' : 'primary'}`} onClick={() => send({ type: 'poll', open: !current.open }).then(load)}>
+                      {current.open ? 'Close voting' : 'Open voting'}
+                    </button>
+                    <button className={`btn ${onScreen ? 'on' : ''}`} onClick={() => send({ type: 'show', slideId: 'poll' })}>Show results on screen</button>
+                    <button className="btn danger" onClick={() => confirm('Clear the votes on this poll?') && send({ type: 'wipe-votes' }).then(load)}>Clear votes</button>
+                  </div>
+                </>
+              ) : (
+                <div className="ctl-row">
+                  <button className="btn" onClick={() => send({ type: 'poll-select', id: p.id })}>Make current</button>
+                  {p.custom && <button className="btn danger" onClick={() => remove(p.id)}>Remove</button>}
+                </div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+      {adding ? (
+        <div className="ctl-add">
+          <label htmlFor="pq">Question</label>
+          <input id="pq" className="grow" maxLength={200} value={question} onChange={(e) => setQuestion(e.target.value)} />
+          <label htmlFor="po">Options, one per line (2 to 6)</label>
+          <textarea id="po" rows={5} value={options} onChange={(e) => setOptions(e.target.value)} />
+          {err && <p className="ctl-error">{err}</p>}
+          <div className="ctl-row">
+            <button className="btn primary" onClick={add}>Add and make current</button>
+            <button className="btn" onClick={() => setAdding(false)}>Cancel</button>
+          </div>
+        </div>
+      ) : (
+        <button className="btn" onClick={() => setAdding(true)}>Add a poll</button>
       )}
-      <div className="ctl-row">
-        <button className={`btn ${open ? 'on' : 'primary'}`} onClick={() => send({ type: 'poll', open: !open })}>
-          {open ? 'Close voting' : 'Open voting'}
-        </button>
-        <button className="btn" onClick={() => send({ type: 'show', slideId: 'poll' })}>Show results on screen</button>
-        <button className="btn danger" onClick={() => confirm('Clear every vote?') && send({ type: 'wipe-votes' })}>Clear votes</button>
-      </div>
     </Section>
   );
 }
@@ -283,8 +356,13 @@ function QuestionsSection({ pin, shown, send }: { pin: string; shown: { id: stri
                   Put on screen
                 </button>
               )}
-              <button className="chip" onClick={() => mark(q.id, 'answered')}>Answered</button>
-              <button className="chip" onClick={() => mark(q.id, q.status === 'hidden' ? 'new' : 'hidden')}>{q.status === 'hidden' ? 'Unhide' : 'Hide'}</button>
+              <button className="chip" onClick={() => (onScreen.has(q.id) && send({ type: 'q-unshow', id: q.id }), mark(q.id, 'answered'))}>Answered</button>
+              <button
+                className="chip"
+                onClick={() => (q.status !== 'hidden' && onScreen.has(q.id) && send({ type: 'q-unshow', id: q.id }), mark(q.id, q.status === 'hidden' ? 'new' : 'hidden'))}
+              >
+                {q.status === 'hidden' ? 'Unhide' : 'Hide'}
+              </button>
             </div>
           </li>
         ))}
@@ -293,22 +371,35 @@ function QuestionsSection({ pin, shown, send }: { pin: string; shown: { id: stri
   );
 }
 
-function TimerSection({ endsAt, now, send }: { endsAt: number | null; now: number; send: Send }) {
+const TIMER_LABELS = ['We resume in', 'Starting in', 'Lunch ends in', 'Session ends in'];
+function TimerSection({ endsAt, label, now, send }: { endsAt: number | null; label: string; now: number; send: Send }) {
   const [custom, setCustom] = useState('');
-  const left = endsAt ? Math.max(0, endsAt - now) : 0;
+  const [lab, setLab] = useState(TIMER_LABELS[0]);
+  const left = endsAt ? endsAt - now : 0;
+  const running = !!endsAt && left > -60000;
+  const start = (minutes: number) => send({ type: 'timer', minutes, label: lab });
   return (
-    <Section title="Break timer">
+    <Section title="Timer">
       <p className="ctl-muted">
-        Shown on break and registration slides instead of the scheduled time.
-        {endsAt ? ` Running: ${Math.floor(left / 60000)}:${String(Math.floor((left % 60000) / 1000)).padStart(2, '0')} left.` : ''}
+        Counts down on every slide: large on intro, break and opening slides, as a pill in the top row on the others. It clears itself a minute after it ends.
       </p>
+      {running && (
+        <p className="ctl-running">
+          {label || 'Timer'} · <b>{left > 0 ? `${Math.floor(left / 60000)}:${String(Math.floor((left % 60000) / 1000)).padStart(2, '0')}` : 'ended'}</b>
+        </p>
+      )}
+      <div className="chips">
+        {TIMER_LABELS.map((l) => (
+          <button key={l} className={`chip ${lab === l ? 'on' : ''}`} onClick={() => setLab(l)}>{l}</button>
+        ))}
+      </div>
       <div className="ctl-row">
-        {[5, 10, 15, 30].map((m) => (
-          <button key={m} className="btn" onClick={() => send({ type: 'timer', minutes: m })}>{m} min</button>
+        {[2, 5, 10, 15, 30].map((m) => (
+          <button key={m} className="btn" onClick={() => start(m)}>{m} min</button>
         ))}
         <input className="num" inputMode="numeric" placeholder="min" value={custom} onChange={(e) => setCustom(e.target.value)} />
-        <button className="btn" onClick={() => Number(custom) > 0 && send({ type: 'timer', minutes: Number(custom) })}>Start</button>
-        {endsAt && <button className="btn" onClick={() => send({ type: 'timer', minutes: null })}>Clear</button>}
+        <button className="btn" onClick={() => Number(custom) > 0 && start(Number(custom))}>Start timer</button>
+        {running && <button className="btn danger" onClick={() => send({ type: 'timer', minutes: null })}>Stop timer</button>}
       </div>
     </Section>
   );
