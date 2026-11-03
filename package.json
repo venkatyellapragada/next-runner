@@ -24,5 +24,5 @@
     "playwright-core": "1.56.0",
     "typescript": "5.9.3"
   },
-  "engines": { "node": ">=20" }
+  "engines": { "node": "22.x" }
 }
