@@ -1,6 +1,6 @@
 # RUNBOOK — NEXT 1.0, 5 November 2026
 
-`<site>` below is the deployed address. PIN = the `CONTROL_PIN` set in Vercel.
+Live site: **https://next-runner.vercel.app** (`<site>` below). PIN = the `CONTROL_PIN` set in Vercel (project `next-runner`, team venkat-2195s-projects).
 
 | Who | Opens | Device |
 |---|---|---|
