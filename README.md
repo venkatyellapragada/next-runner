@@ -9,6 +9,7 @@ Google Hyderabad, Kondapur.
 | `/control` | the person running the day (phone, PIN) | next/previous, jump, poll, questions, break timer, notice |
 | `/join` | audience, via the QR (no login) | now and agenda, speaker bios, ask a question, pulse poll, feedback, decks |
 | `/print` | AV desk | every slide on one page each, for the PDF fallback |
+| `/sim/` | screen (interlude) | the Campx AI-University simulation, a static build served from `public/sim` |
 
 Day-of instructions: **RUNBOOK.md**. Look and feel: **DESIGN.md**.
 
@@ -38,6 +39,13 @@ Slides are derived from the agenda: a talk gives a *transition* and a *speaker* 
 *transition* and a *panel* slide, breaks and registration a *holding* slide, the Open Forum a
 *transition* and the *questions* slide. *Poll results* and *questions* can be put on screen at any time
 from /control and return to where you were.
+
+## Interludes
+- The NEXT film: `public/media/next-feature.mp4` (poster `next-feature-poster.jpg`). Replace the file to change it.
+- The simulation: a static export of `venkatyellapragada/campx-ai-university`, built under `/sim` and committed in
+  `public/sim`. To refresh it after the simulation changes: check it out next to this repo, then
+  `node scripts/update-sim.mjs` and commit `public/sim`.
+- Keys and buttons: RUNBOOK.md.
 
 ## Editing content
 - Agenda, titles, topics, bios, deck links: `content/event.json`.

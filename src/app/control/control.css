@@ -3,11 +3,12 @@
 .ctl-gate form { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
 .ctl-gate label { font-family: var(--display); font-size: 24px; font-weight: 500; }
 .ctl-gate input { font-size: 28px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 4px; letter-spacing: 0.2em; }
-.ctl-eyebrow { font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.18em; color: var(--brand); margin: 0 8px 0 0; }
+.ctl-eyebrow { font-family: var(--mono); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.18em; color: var(--indigo); margin: 0 8px 0 0; }
+.ctl-brand { font-family: var(--mono); font-weight: 600; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink); margin-right: 6px; }
 .ctl-muted { color: var(--ink-3); margin: 4px 0 10px; }
 .ctl-error { color: var(--danger); margin: 8px 0; }
 .ctl-mono { font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: var(--ink-2); word-break: break-word; }
-.ctl-top { position: sticky; top: 0; z-index: 2; background: var(--surface); display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 13px; color: var(--ink-2); }
+.ctl-top { position: sticky; top: 0; z-index: 2; background: var(--paper); display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 13px; color: var(--ink-2); }
 .ctl-status { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
 .dot.ok { background: var(--ok); }
@@ -20,11 +21,12 @@
 .ctl-nav { display: grid; grid-template-columns: 1fr 2fr; gap: 8px; }
 .ctl-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; align-items: center; }
 
-.btn { display: inline-flex; flex-direction: column; justify-content: center; align-items: center; min-height: 48px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); color: var(--ink); font-weight: 600; text-decoration: none; cursor: pointer; }
+.btn { font-family: var(--text); display: inline-flex; flex-direction: column; justify-content: center; align-items: center; min-height: 48px; padding: 8px 14px; border: 1px solid #d6d4cc; border-radius: 4px; background: #fdfcf9; color: var(--ink); font-weight: 600; text-decoration: none; cursor: pointer; }
 .btn:active { background: var(--tint); }
 .btn:disabled { opacity: 0.6; }
 .btn.primary { background: var(--brand); border-color: var(--brand); color: #fff; }
 .btn.big { min-height: 72px; font-size: 22px; font-family: var(--display); font-weight: 500; }
+.btn small { font-family: var(--mono); font-size: 10px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.7; margin-top: 2px; }
 .btn.big small { font-family: var(--text); font-size: 12px; font-weight: 400; opacity: 0.85; margin-top: 2px; }
 .btn.on { background: var(--brand-tint); border-color: var(--brand); color: var(--brand); }
 .btn.danger { color: var(--danger); border-color: #f1c3c7; }
@@ -38,7 +40,7 @@
 .ctl-order .when { font-variant-numeric: tabular-nums; color: var(--ink-3); padding-top: 2px; }
 .ctl-order .label { font-weight: 600; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
-.chip { min-height: 36px; padding: 6px 12px; border: 1px solid var(--line); background: var(--surface); border-radius: 4px; font-size: 14px; cursor: pointer; text-align: left; }
+.chip { min-height: 36px; padding: 6px 12px; border: 1px solid #d6d4cc; background: #fdfcf9; border-radius: 4px; font-size: 14px; cursor: pointer; text-align: left; }
 .chip.on { border-color: var(--brand); color: var(--brand); background: var(--brand-tint); font-weight: 600; }
 .chip.primary { border-color: var(--brand); color: var(--brand); font-weight: 600; }
 
@@ -61,3 +63,8 @@
 
 input.num { width: 72px; min-height: 48px; padding: 8px; border: 1px solid var(--line); border-radius: 4px; }
 input.grow { flex: 1; min-width: 180px; min-height: 48px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 4px; }
+
+.interludes .btn { flex: 1; background: var(--night); color: #fff; border-color: var(--night); }
+.interludes .btn.on { background: var(--violet); border-color: var(--violet); color: var(--night); }
+.interludes .btn.primary { background: var(--red); border-color: var(--red); color: #fff; }
+input.num, input.grow { background: #fff; border-color: #d6d4cc; }

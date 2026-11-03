@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react';
 import { Avatar } from '@/components/Avatar';
 import { Logo } from '@/components/Logo';
+import { NextMark } from '@/components/NextMark';
 import { agenda, data, event, person, poll, slotProgress, slotWindow, talkSlots, type Slot } from '@/lib/event';
 import { deviceId, useLive, useNow } from '@/lib/live';
 import { activeSlot } from '@/lib/state';
@@ -40,10 +41,10 @@ export default function JoinClient({ photos }: { photos: Record<string, string> 
     <div className="jn">
       <header className="jn-head">
         <div className="jn-brand">
-          <span className="jn-name">{event.name}</span>
-          <Logo height={18} />
+          <NextMark size={40} />
+          <span className="jn-by">by <Logo height={16} /></span>
         </div>
-        <p className="jn-sub">{event.dateLabel} · {event.venue}</p>
+        <p className="jn-sub">05.11.2026 · {event.venue}</p>
       </header>
       <nav className="jn-tabs" aria-label="Sections">
         {TABS.map(([t, label]) => (
@@ -74,7 +75,9 @@ export default function JoinClient({ photos }: { photos: Record<string, string> 
         {tab === 'feedback' && <Feedback />}
       </main>
       <footer className="jn-foot">
-        {event.expansion}. Hosted by Campx, the AI-native campus operating system.
+        New Education Experience &amp; Transformation
+        <br />
+        Campx · AI-forward education
       </footer>
     </div>
   );

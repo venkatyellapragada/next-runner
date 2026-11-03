@@ -94,6 +94,7 @@ function Console({ pin, health, photos, onLock }: { pin: string; health: Health;
     <main className="ctl">
       <header className="ctl-top">
         <div className="ctl-status">
+          <span className="ctl-brand">NEXT 1.0 · Control</span>
           <span className={`dot ${online ? 'ok' : 'bad'}`} />
           {online ? 'Live' : 'Offline: retrying'} · {health.store === 'redis' ? 'shared store' : 'in-memory store (single machine only)'}
           {!health.writable && <strong className="warn"> · store not accepting writes</strong>}
@@ -110,7 +111,7 @@ function Console({ pin, health, photos, onLock }: { pin: string; health: Health;
         )}
         <p className="ctl-onscreen">
           <span className="ctl-eyebrow">On screen</span>
-          {slotOf(state.slideId)?.label ?? slide.name} · {slide.name}
+          {state.overlay === 'video' ? 'The NEXT film' : state.overlay === 'sim' ? 'The simulation' : `${slotOf(state.slideId)?.label ?? slide.name} · ${slide.name}`}
         </p>
         <div className="ctl-nav">
           <button className="btn" disabled={busy} onClick={() => send({ type: 'prev' })}>Previous</button>
@@ -118,6 +119,22 @@ function Console({ pin, health, photos, onLock }: { pin: string; health: Health;
             Next
             {upNext && <small>{slotOf(upNext.id)?.label ?? ''} · {upNext.name}</small>}
           </button>
+        </div>
+        <div className="ctl-row interludes">
+          <button className={`btn ${state.overlay === 'video' ? 'on' : ''}`} onClick={() => send({ type: 'overlay', overlay: state.overlay === 'video' ? null : 'video' })}>
+            {state.overlay === 'video' ? 'Stop film' : 'Play film'}
+            <small>V on the laptop</small>
+          </button>
+          <button className={`btn ${state.overlay === 'sim' ? 'on' : ''}`} onClick={() => send({ type: 'overlay', overlay: state.overlay === 'sim' ? null : 'sim' })}>
+            {state.overlay === 'sim' ? 'Close simulation' : 'Simulation'}
+            <small>S on the laptop</small>
+          </button>
+          {state.overlay && (
+            <button className="btn primary" onClick={() => send({ type: 'overlay', overlay: null })}>
+              Back to slides
+              <small>Q / Esc</small>
+            </button>
+          )}
         </div>
         <div className="ctl-row">
           <button className={`btn ${state.slideId === 'poll' ? 'on' : ''}`} onClick={() => send({ type: 'show', slideId: 'poll' })}>Poll results</button>

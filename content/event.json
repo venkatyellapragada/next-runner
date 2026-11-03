@@ -125,6 +125,11 @@
     "Principal or Director", "IT Head", "Faculty", "Government", "Other"
   ],
 
+  "interludes": {
+    "video": { "title": "NEXT teaser film", "src": "/media/next-feature.mp4", "poster": "/media/next-feature-poster.jpg" },
+    "simulation": { "title": "Campx AI-University", "url": "/sim/index.html" }
+  },
+
   "decks": {
     "note": "Decks are shared here after the event.",
     "links": []

@@ -1,21 +1,23 @@
 'use client';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Fit } from '@/components/Fit';
 import { Screen } from '@/components/screen/Slides';
 import { joinUrlFor } from '@/components/bits';
-import { hhmmToMs, slideById } from '@/lib/event';
+import { data, hhmmToMs, slideById } from '@/lib/event';
 import { control, getPin, setPin, useLive, useNow } from '@/lib/live';
-import { initialState, reduce, type Action } from '@/lib/state';
+import { initialState, reduce, type Action, type Overlay } from '@/lib/state';
 
 // The projector page. Follows /control through /api/state. If the network dies it keeps the
-// last state, the clock keeps running, and the keyboard (or a USB clicker) still moves slides:
-//   → / PageDown / Space  next      ← / PageUp  previous      F  fullscreen
+// last state, the clock keeps running, and the keyboard (or a USB clicker) still drives it:
+//   → / PageDown / Space   next            ← / PageUp   previous
+//   V   play the NEXT film        S   show the simulation        Q / Esc   back to the slides
+//   M   sound on/off (film)       F   full screen
 // Open once as /screen?pin=XXXX and the keyboard also moves /control's state.
 // Testing: ?at=10:25 freezes the clock, ?slide=keynote-1:speaker forces a slide.
 export default function ScreenClient({ photos }: { photos: Record<string, string> }) {
-  const { data, setData, online, offset } = useLive('/api/state', 1000);
+  const { data: live, setData, online, offset } = useLive('/api/state', 1000);
   const [params, setParams] = useState<{ at: number | null; slide: string | null; pin: string }>({ at: null, slide: null, pin: '' });
-  const [localSlide, setLocalSlide] = useState<{ id: string; v: number } | null>(null);
+  const [local, setLocal] = useState<{ slideId: string; overlay: Overlay; v: number } | null>(null);
   const [origin, setOrigin] = useState('');
 
   useEffect(() => {
@@ -28,21 +30,29 @@ export default function ScreenClient({ photos }: { photos: Record<string, string
   }, []);
 
   const now = useNow(offset, params.at);
-  const server = data?.state ?? initialState;
+  const server = live?.state ?? initialState;
   // A keyboard move holds until /control next changes the state.
-  const slideId = params.slide ?? (localSlide && localSlide.v === server.v ? localSlide.id : server.slideId);
-  const state = useMemo(() => ({ ...server, slideId }), [server, slideId]);
+  const mine = local && local.v === server.v ? local : null;
+  const state = useMemo(
+    () => ({ ...server, slideId: params.slide ?? mine?.slideId ?? server.slideId, overlay: mine ? mine.overlay : server.overlay ?? null }),
+    [server, mine, params.slide],
+  );
 
   useEffect(() => {
     const onKey = async (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const k = e.key.toLowerCase();
       let action: Action | null = null;
-      if (['ArrowRight', 'PageDown', ' ', 'Enter'].includes(e.key)) action = { type: 'next' };
-      if (['ArrowLeft', 'PageUp', 'Backspace'].includes(e.key)) action = { type: 'prev' };
-      if (e.key === 'f' || e.key === 'F') document.documentElement.requestFullscreen?.().catch(() => {});
+      if (['arrowright', 'pagedown', ' ', 'enter'].includes(k)) action = { type: 'next' };
+      else if (['arrowleft', 'pageup', 'backspace'].includes(k)) action = { type: 'prev' };
+      else if (k === 'v') action = { type: 'overlay', overlay: state.overlay === 'video' ? null : 'video' };
+      else if (k === 's') action = { type: 'overlay', overlay: state.overlay === 'sim' ? null : 'sim' };
+      else if (k === 'escape' || k === 'q') action = state.overlay ? { type: 'overlay', overlay: null } : null;
+      else if (k === 'f') document.documentElement.requestFullscreen?.().catch(() => {});
       if (!action) return;
       e.preventDefault();
       const moved = reduce(state, action, Date.now());
-      setLocalSlide({ id: moved.slideId, v: server.v });
+      setLocal({ slideId: moved.slideId, overlay: moved.overlay, v: server.v });
       if (params.pin) {
         try {
           const res = await control(action, params.pin);
@@ -70,18 +80,104 @@ export default function ScreenClient({ photos }: { photos: Record<string, string
   }, []);
 
   if (!origin) return null;
-  const slide = slideById(slideId) ?? slideById(initialState.slideId)!;
+  const slide = slideById(state.slideId) ?? slideById(initialState.slideId)!;
   return (
-    <Fit style={{ position: 'fixed', inset: 0 }}>
-      <Screen
-        slide={slide}
-        state={state}
-        now={now}
-        votes={data?.votes}
-        photos={photos}
-        joinUrl={joinUrlFor(origin)}
-        offline={!online}
-      />
-    </Fit>
+    <>
+      <Fit style={{ position: 'fixed', inset: 0 }}>
+        <Screen
+          slide={slide}
+          state={{ ...state, overlay: null }}
+          now={now}
+          votes={live?.votes}
+          photos={photos}
+          joinUrl={joinUrlFor(origin)}
+          offline={!online}
+        />
+      </Fit>
+      {state.overlay && (
+        <Interlude
+          kind={state.overlay}
+          onClose={async () => {
+            const action: Action = { type: 'overlay', overlay: null };
+            setLocal({ slideId: state.slideId, overlay: null, v: server.v });
+            if (params.pin) control(action, params.pin).then((r) => r && setData(r)).catch(() => {});
+          }}
+        />
+      )}
+    </>
+  );
+}
+
+/** The film or the simulation, full bleed over the slides. */
+function Interlude({ kind, onClose }: { kind: 'video' | 'sim'; onClose: () => void }) {
+  const video = useRef<HTMLVideoElement>(null);
+  const frame = useRef<HTMLIFrameElement>(null);
+  // The simulation is served from this site (/sim), so its keys can be watched too: Q leaves it.
+  // Esc stays the simulation's own ("fly home").
+  const watchFrame = () => {
+    try {
+      frame.current?.contentWindow?.addEventListener('keydown', (e) => {
+        const t = e.target as HTMLElement | null;
+        if (e.key.toLowerCase() === 'q' && !(t && /input|textarea|select/i.test(t.tagName))) onClose();
+      });
+    } catch {
+      /* another origin: use the button or /control */
+    }
+  };
+  const [hint, setHint] = useState(true);
+  const [muted, setMuted] = useState(false);
+  const { video: film, simulation } = data.interludes;
+
+  useEffect(() => {
+    let t = setTimeout(() => setHint(false), 3000);
+    const move = () => {
+      setHint(true);
+      clearTimeout(t);
+      t = setTimeout(() => setHint(false), 2500);
+    };
+    window.addEventListener('mousemove', move);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener('mousemove', move);
+    };
+  }, []);
+
+  useEffect(() => {
+    const v = video.current;
+    if (!v) return;
+    v.currentTime = 0;
+    // Browsers allow sound only after someone has pressed a key or clicked on this page.
+    v.play().catch(() => {
+      v.muted = true;
+      setMuted(true);
+      v.play().catch(() => {});
+    });
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() === 'm') {
+        v.muted = !v.muted;
+        setMuted(v.muted);
+        if (v.paused) v.play().catch(() => {});
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [kind]);
+
+  return (
+    <div className={`interlude${hint ? ' show-hint' : ''}`}>
+      {kind === 'video' ? (
+        <video ref={video} src={film.src} poster={film.poster} loop playsInline preload="auto" />
+      ) : simulation.url ? (
+        <iframe ref={frame} onLoad={watchFrame} src={simulation.url} title={simulation.title} allow="fullscreen; autoplay; clipboard-write" />
+      ) : (
+        <div className="grid-night" style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', fontFamily: 'var(--mono)', fontSize: 20, letterSpacing: '0.12em', textAlign: 'center', lineHeight: 1.8 }}>
+          SIMULATION LINK NOT SET
+          <br />
+          content/event.json → interludes.simulation.url
+        </div>
+      )}
+      <button className="close" onClick={onClose}>Back to slides · {kind === 'video' ? 'Esc' : 'Q'}</button>
+      <div className="hint">{kind === 'video' ? (muted ? 'Sound off · press M' : 'M mutes · Esc returns') : 'Q returns to the slides'}</div>
+    </div>
   );
 }

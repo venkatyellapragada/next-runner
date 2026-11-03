@@ -32,6 +32,10 @@ export type EventData = {
   poll: { question: string; options: string[] };
   roles: string[];
   decks: { note: string; links: DeckLink[] };
+  interludes: {
+    video: { title: string; src: string; poster: string };
+    simulation: { title: string; url: string };
+  };
 };
 
 export const data = raw as EventData;

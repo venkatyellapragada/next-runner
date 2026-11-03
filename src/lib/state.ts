@@ -2,6 +2,7 @@
 // increments on every change so /screen can tell a new command from an old one.
 import { clockSlot, FIRST_SLIDE, slideById, slideIndex, slides, slotById, type Slot } from './event';
 
+export type Overlay = 'video' | 'sim' | null;
 export type ShownQuestion = { id: string; text: string; name?: string; role?: string; org?: string };
 export type LiveState = {
   v: number;
@@ -16,6 +17,8 @@ export type LiveState = {
   /** A one-line announcement shown along the bottom of the screen. */
   notice: string;
   feedbackOpen: boolean;
+  /** A full-screen interlude over the slides: the teaser film or the simulation. */
+  overlay: Overlay;
   updatedAt: number;
 };
 
@@ -28,6 +31,7 @@ export const initialState: LiveState = {
   timer: { endsAt: null, label: '' },
   notice: '',
   feedbackOpen: false,
+  overlay: null,
   updatedAt: 0,
 };
 
@@ -45,6 +49,7 @@ export type Action =
   | { type: 'timer'; minutes: number | null; label?: string }
   | { type: 'notice'; text: string }
   | { type: 'feedback'; open: boolean }
+  | { type: 'overlay'; overlay: Overlay }
   | { type: 'reset' };
 
 const MAX_SHOWN = 4;
@@ -58,16 +63,21 @@ export function reduce(s: LiveState, a: Action, now: number): LiveState {
   switch (a.type) {
     case 'next':
     case 'prev': {
+      // With an interlude up, the first press only returns to the slide underneath.
+      if (s.overlay) return { ...n, overlay: null };
       if (slideIndex(s.slideId) < 0) return { ...n, slideId: inOrder(s.returnTo), returnTo: null };
       const i = slideIndex(s.slideId) + (a.type === 'next' ? 1 : -1);
       return { ...n, slideId: slides[Math.min(slides.length - 1, Math.max(0, i))].id };
     }
     case 'go':
-      return slideById(a.slideId) ? { ...n, slideId: a.slideId, returnTo: null } : s;
+      return slideById(a.slideId) ? { ...n, slideId: a.slideId, returnTo: null, overlay: null } : s;
+    case 'overlay':
+      return { ...n, overlay: a.overlay };
     case 'show':
       return {
         ...n,
         slideId: a.slideId,
+        overlay: null,
         returnTo: slideIndex(s.slideId) >= 0 ? s.slideId : s.returnTo,
       };
     case 'back':
