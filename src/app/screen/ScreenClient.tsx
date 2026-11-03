@@ -83,16 +83,19 @@ export default function ScreenClient({ photos }: { photos: Record<string, string
   const slide = slideById(state.slideId) ?? slideById(initialState.slideId)!;
   return (
     <>
-      <Fit style={{ position: 'fixed', inset: 0 }}>
-        <Screen
-          slide={slide}
-          state={{ ...state, overlay: null }}
-          now={now}
-          votes={live?.votes}
-          photos={photos}
-          joinUrl={joinUrlFor(origin)}
-          offline={!online}
-        />
+      <Fit fill style={{ position: 'fixed', inset: 0 }} background={slide.kind === 'break' ? '#f1f3fa' : '#ffffff'}>
+        {(size) => (
+          <Screen
+            slide={slide}
+            state={{ ...state, overlay: null }}
+            now={now}
+            votes={live?.votes}
+            photos={photos}
+            joinUrl={joinUrlFor(origin)}
+            offline={!online}
+            size={size}
+          />
+        )}
       </Fit>
       {state.overlay && (
         <Interlude

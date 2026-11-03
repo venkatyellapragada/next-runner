@@ -9,7 +9,7 @@
 .jn-tabs button.on { color: var(--brand); border-bottom-color: var(--brand); }
 
 .jn-main { padding: 16px; display: flex; flex-direction: column; gap: 16px; }
-.jn-card { border: 1px solid var(--line); border-radius: 4px; padding: 16px; background: #fdfcf9; text-align: left; }
+.jn-card { border: 1px solid var(--line); border-radius: 4px; padding: 16px; background: #fff; text-align: left; }
 .jn-eyebrow { font-family: var(--mono); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.18em; color: var(--indigo); margin: 0 0 8px; }
 .jn-eyebrow.muted { color: var(--ink-3); }
 .jn-label { margin: 0; color: var(--ink-2); font-family: var(--display); font-weight: 500; }
@@ -23,7 +23,7 @@
 .jn-tag.now { margin: 0 0 2px; display: block; }
 
 .jn-bar { height: 3px; background: var(--line); border-radius: 2px; margin: 12px 0 4px; overflow: hidden; }
-.jn-bar > div { height: 100%; background: linear-gradient(90deg, var(--indigo), var(--magenta) 70%, var(--red)); }
+.jn-bar > div { height: 100%; background: var(--brand-gradient); }
 
 .jn-people { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
 .jn-people li { display: flex; gap: 12px; align-items: flex-start; }
@@ -62,12 +62,12 @@
 
 .jn-form { display: flex; flex-direction: column; gap: 6px; }
 .jn-form label { font-weight: 600; margin-top: 8px; }
-.jn-form input, .jn-form select, .jn-form textarea { width: 100%; min-height: 48px; padding: 10px 12px; border: 1px solid #d6d4cc; border-radius: 4px; background: #fff; font-size: 16px; }
+.jn-form input, .jn-form select, .jn-form textarea { width: 100%; min-height: 48px; padding: 10px 12px; border: 1px solid #d4d4d4; border-radius: 4px; background: #fff; font-size: 16px; }
 .jn-form textarea { resize: vertical; }
 .jn-form .jn-btn { margin-top: 12px; }
 .jn-count { margin: 0; text-align: right; color: var(--ink-3); font-size: 12px; }
 .jn-rating { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
-.jn-rating button { min-height: 52px; border: 1px solid #d6d4cc; border-radius: 4px; background: #fff; font-family: var(--display); font-size: 20px; font-weight: 500; cursor: pointer; }
+.jn-rating button { min-height: 52px; border: 1px solid #d4d4d4; border-radius: 4px; background: #fff; font-family: var(--display); font-size: 20px; font-weight: 500; cursor: pointer; }
 .jn-rating button.on { background: var(--brand); border-color: var(--brand); color: #fff; }
 .jn-scale { display: flex; justify-content: space-between; margin: 2px 0 0; font-size: 12px; color: var(--ink-3); }
 .jn-form .jn-check { display: flex; gap: 10px; align-items: flex-start; font-weight: 400; }

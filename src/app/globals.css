@@ -1,52 +1,43 @@
-/* Tokens from DESIGN.md. Change them there first. */
+/* Tokens from DESIGN.md (the Campx Design System). Change them there first. */
 @font-face {
-  font-family: 'Outfit';
-  src: url('/fonts/outfit.woff2') format('woff2');
-  font-weight: 300 800;
+  font-family: 'Hanken Grotesk';
+  src: url('/fonts/hanken-grotesk.woff2') format('woff2');
+  font-weight: 300 900;
   font-display: block;
 }
 @font-face {
-  font-family: 'Plus Jakarta Sans';
-  src: url('/fonts/plus-jakarta-sans.woff2') format('woff2');
-  font-weight: 400 700;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Geist Mono';
-  src: url('/fonts/geist-mono.woff2') format('woff2');
+  font-family: 'JetBrains Mono';
+  src: url('/fonts/jetbrains-mono.woff2') format('woff2');
   font-weight: 400 700;
   font-display: swap;
 }
 
 :root {
-  --paper: #f6f5f0;
-  --ink: #0d0b14;
-  --ink-2: #5e5b69;
-  --ink-3: #9a97a3;
-  --fade: #cfcdc5;
-  --rule: #dedcd4;
-  --night: #100e23;
-  --night-2: #1b1931;
-  --snow: #ffffff;
-  --snow-2: #a9a6bc;
-  --snow-3: #6b697e;
+  --paper: #ffffff;
+  --bg-2: #f1f3fa;
+  --ink: #0a0a0a;
+  --ink-2: #525252;
+  --ink-3: #737373;
+  --rule: #e5e5e5;
+  --rule-strong: #a1a1a1;
   --indigo: #1e027f;
-  --violet: #8b86ff;
-  --red: #e43341;
-  --coral: #f85a64;
-  --magenta: #931c88;
-  --ok: #2f7d32;
-  --danger: #c81e2e;
-  --display: 'Outfit', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --text: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --mono: 'Geist Mono', ui-monospace, Menlo, Consolas, monospace;
-  --radius: 4px;
-  /* Older component names, mapped onto the new palette. */
+  --coral: #c24548;
+  --magenta: #822c79;
+  --brand-gradient: linear-gradient(135deg, #c24548, #822c79, #1e027f);
+  --ok: #5d7832;
+  --danger: #dc2626;
+  --display: 'Hanken Grotesk', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --text: 'Hanken Grotesk', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+  --radius: 10px;
+  /* Names the components use, mapped onto the system. */
   --surface: var(--paper);
   --line: var(--rule);
-  --tint: #eae8e0;
+  --tint: var(--bg-2);
   --brand: var(--indigo);
-  --brand-tint: #e9e6f6;
+  --brand-tint: #ece9f7;
+  --violet: var(--indigo);
+  --night: var(--ink);
   color-scheme: light;
 }
 
@@ -63,28 +54,21 @@ button, input, select, textarea { font: inherit; color: inherit; }
 a { color: var(--indigo); }
 .tabular { font-variant-numeric: tabular-nums; }
 
-/* Tracked monospace label, the film's chrome voice. */
 .mono, .eyebrow {
   font-family: var(--mono);
-  font-weight: 600;
+  font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.14em;
 }
 .eyebrow { color: var(--ink-3); }
 
-/* The plus-mark grid from the film. */
-.grid-paper {
-  background-color: var(--paper);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96'%3E%3Cpath d='M48 43v10M43 48h10' stroke='%23DEDCD4' stroke-width='1.5'/%3E%3C/svg%3E");
-}
-.grid-night {
-  background-color: var(--night);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96'%3E%3Cpath d='M48 43v10M43 48h10' stroke='%23221F3A' stroke-width='1.5'/%3E%3C/svg%3E");
-  color: var(--snow);
+/* The white lockup on the brand gradient. */
+.on-brand {
+  color: #fff;
   --logo-ink: #ffffff;
-  --logo-red: #e33241;
-  --logo-indigo: #8078ff;
-  --logo-overlap: #be5fd6;
+  --logo-red: #ffffff;
+  --logo-indigo: #ffffff;
+  --logo-overlap: #ffffff;
 }
 
 /* Slide entry: the only animation on /screen */
@@ -93,7 +77,7 @@ a { color: var(--indigo); }
   to { opacity: 1; transform: none; }
 }
 @keyframes resolve {
-  from { opacity: 0.18; }
+  from { opacity: 0.2; }
   to { opacity: 1; }
 }
 .slide-enter { animation: slide-in 420ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }

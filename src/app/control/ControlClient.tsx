@@ -106,7 +106,7 @@ function Console({ pin, health, photos, onLock }: { pin: string; health: Health;
       <section className="ctl-now">
         {origin && (
           <Fit style={{ width: '100%', aspectRatio: '16 / 9', border: '1px solid var(--line)', borderRadius: 4 }}>
-            <Screen slide={slide} state={state} now={now} votes={votes} photos={photos} joinUrl={joinUrlFor(origin)} />
+            {() => <Screen slide={slide} state={state} now={now} votes={votes} photos={photos} joinUrl={joinUrlFor(origin)} />}
           </Fit>
         )}
         <p className="ctl-onscreen">
