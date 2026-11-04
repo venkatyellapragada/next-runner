@@ -65,7 +65,7 @@ function Console({ pin, health, photos, onLock }: { pin: string; health: Health;
   const [err, setErr] = useState('');
   const [origin, setOrigin] = useState('');
   // The tab is remembered on this phone, so a reload lands where the operator was.
-  const [tab, setTab] = useState<Tab>('screen');
+  const [tab, setTab] = useState<Tab>('live');
   useEffect(() => {
     setOrigin(location.origin);
     try {
@@ -117,6 +117,8 @@ function Console({ pin, health, photos, onLock }: { pin: string; health: Health;
 
   return (
     <main className="ctl ctl-tabbed">
+      {/* Pinned: what the room sees right now, above every tab. */}
+      <div className="ctl-pin">
       <header className="ctl-top">
         <div className="ctl-status">
           <span className="ctl-brand">NEXT 1.0 · Control</span>
@@ -128,6 +130,20 @@ function Console({ pin, health, photos, onLock }: { pin: string; health: Health;
         <button className="link" onClick={onLock}>Lock</button>
       </header>
 
+      <section className="ctl-now ctl-pinned" aria-label="On screen now">
+        {origin && (
+          <Fit style={{ flex: '0 0 56%', aspectRatio: '16 / 9', border: '1px solid var(--line)', borderRadius: 4 }}>
+            {() => <Screen slide={slide} state={state} now={now} polls={polls} photos={photos} joinUrl={joinUrlFor(origin)} />}
+          </Fit>
+        )}
+        <div className="ctl-onscreen">
+          <span className="ctl-eyebrow">On screen</span>
+          <span className="what">{onScreenLine}</span>
+          {state.notice.trim() && <span className="ctl-flag">Notice up</span>}
+          {state.focus && <span className="ctl-focus">Phones: {state.focus === 'poll' ? 'poll' : 'ask'}</span>}
+        </div>
+      </section>
+
       <nav className="ctl-tabs" role="tablist" aria-label="Control sections">
         {TABS.map(([id, label]) => (
           <button key={id} role="tab" aria-selected={tab === id} className={tab === id ? 'on' : ''} onClick={() => pick(id)}>
@@ -136,20 +152,21 @@ function Console({ pin, health, photos, onLock }: { pin: string; health: Health;
           </button>
         ))}
       </nav>
+      </div>
 
-      {tab === 'screen' && (
+      {tab === 'live' && (
         <>
-          <section className="ctl-now">
-            {origin && (
-              <Fit style={{ width: '100%', aspectRatio: '16 / 9', border: '1px solid var(--line)', borderRadius: 4 }}>
-                {() => <Screen slide={slide} state={state} now={now} polls={polls} photos={photos} joinUrl={joinUrlFor(origin)} />}
-              </Fit>
-            )}
-            <p className="ctl-onscreen">
-              <span className="ctl-eyebrow">On screen</span>
-              {onScreenLine}
-              {state.focus && <span className="ctl-focus">Phones: {state.focus === 'poll' ? 'poll' : 'ask'}</span>}
-            </p>
+          <section className="ctl-section">
+            <h2>Put up, then return</h2>
+            <div className="ctl-row">
+              <button className={`btn ${state.slideId === 'poll' ? 'on' : ''}`} onClick={() => send({ type: 'show', slideId: 'poll' })}>Poll results</button>
+              <button className={`btn ${state.slideId === 'questions' ? 'on' : ''}`} onClick={() => send({ type: 'show', slideId: 'questions' })}>Questions</button>
+              <button className={`btn ${state.slideId === 'ask' ? 'on' : ''}`} onClick={() => send({ type: 'show', slideId: 'ask' })}>Question prompt</button>
+              {state.returnTo && <button className="btn primary" onClick={() => send({ type: 'back' })}>Back to agenda</button>}
+            </div>
+          </section>
+          <section className="ctl-section">
+            <h2>Interludes</h2>
             <div className="ctl-row interludes">
               <button className={`btn ${state.overlay === 'video' ? 'on' : ''}`} onClick={() => send({ type: 'overlay', overlay: state.overlay === 'video' ? null : 'video' })}>
                 {state.overlay === 'video' ? 'Stop film' : 'Play film'}
@@ -176,13 +193,6 @@ function Console({ pin, health, photos, onLock }: { pin: string; health: Health;
                   <small>Q / Esc</small>
                 </button>
               )}
-            </div>
-            <p className="ctl-eyebrow" style={{ marginTop: 14 }}>Put up, then return</p>
-            <div className="ctl-row" style={{ marginTop: 6 }}>
-              <button className={`btn ${state.slideId === 'poll' ? 'on' : ''}`} onClick={() => send({ type: 'show', slideId: 'poll' })}>Poll results</button>
-              <button className={`btn ${state.slideId === 'questions' ? 'on' : ''}`} onClick={() => send({ type: 'show', slideId: 'questions' })}>Questions</button>
-              <button className={`btn ${state.slideId === 'ask' ? 'on' : ''}`} onClick={() => send({ type: 'show', slideId: 'ask' })}>Question prompt</button>
-              {state.returnTo && <button className="btn primary" onClick={() => send({ type: 'back' })}>Back to agenda</button>}
             </div>
           </section>
           <NoticeSection notice={state.notice} send={send} />
@@ -268,7 +278,7 @@ function Console({ pin, health, photos, onLock }: { pin: string; health: Health;
 }
 
 const TABS = [
-  ['screen', 'Screen'],
+  ['live', 'Live'],
   ['agenda', 'Agenda'],
   ['polls', 'Polls'],
   ['questions', 'Questions'],

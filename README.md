@@ -6,7 +6,7 @@ Google Hyderabad, Kondapur.
 | Route | Who | What |
 |---|---|---|
 | `/screen` | projector | slides for every agenda slot, header with clock, agenda tracker and QR |
-| `/control` | the person running the day (phone, PIN) | tabs: Screen, Agenda, Polls, Questions, More; next/previous docked at the bottom |
+| `/control` | the person running the day (phone, PIN) | live preview pinned on top; tabs Live, Agenda, Polls, Questions, More; next/previous docked at the bottom |
 | `/join` | audience, via the QR (no login) | now and agenda, speaker bios, ask a question, pulse poll, the film and the simulation (Watch), feedback, decks |
 | `/print` | AV desk | every slide on one page each, for the PDF fallback |
 | `/sim/` | screen (interlude) | the Campx AI-University simulation, a static build served from `public/sim` |
