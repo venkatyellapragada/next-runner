@@ -65,7 +65,7 @@ function Console({ pin, health, photos, onLock }: { pin: string; health: Health;
   const [err, setErr] = useState('');
   const [origin, setOrigin] = useState('');
   // The tab is remembered on this phone, so a reload lands where the operator was.
-  const [tab, setTab] = useState<Tab>('live');
+  const [tab, setTab] = useState<Tab>('agenda');
   useEffect(() => {
     setOrigin(location.origin);
     try {
@@ -75,7 +75,10 @@ function Console({ pin, health, photos, onLock }: { pin: string; health: Health;
   }, []);
   const pick = (t: Tab) => {
     setTab(t);
-    window.scrollTo({ top: 0 });
+    // Scrolled down into a tab: start the new one at the tab bar, the screen just above it.
+    const bar = document.querySelector<HTMLElement>('.ctl-tabs');
+    const below = document.querySelector<HTMLElement>('.ctl-now');
+    if (bar && below && window.scrollY > below.offsetTop + below.offsetHeight) window.scrollTo({ top: below.offsetTop + below.offsetHeight });
     try {
       localStorage.setItem(TAB_KEY, t);
     } catch {}
@@ -117,8 +120,6 @@ function Console({ pin, health, photos, onLock }: { pin: string; health: Health;
 
   return (
     <main className="ctl ctl-tabbed">
-      {/* Pinned: what the room sees right now, above every tab. */}
-      <div className="ctl-pin">
       <header className="ctl-top">
         <div className="ctl-status">
           <span className="ctl-brand">NEXT 1.0 · Control</span>
@@ -130,18 +131,63 @@ function Console({ pin, health, photos, onLock }: { pin: string; health: Health;
         <button className="link" onClick={onLock}>Lock</button>
       </header>
 
-      <section className="ctl-now ctl-pinned" aria-label="On screen now">
+      {/* The screen: always here, above the tabs. */}
+      <section className="ctl-now">
         {origin && (
-          <Fit style={{ flex: '0 0 56%', aspectRatio: '16 / 9', border: '1px solid var(--line)', borderRadius: 4 }}>
+          <Fit style={{ width: '100%', aspectRatio: '16 / 9', border: '1px solid var(--line)', borderRadius: 4 }}>
             {() => <Screen slide={slide} state={state} now={now} polls={polls} photos={photos} joinUrl={joinUrlFor(origin)} />}
           </Fit>
         )}
-        <div className="ctl-onscreen">
+        <p className="ctl-onscreen">
           <span className="ctl-eyebrow">On screen</span>
-          <span className="what">{onScreenLine}</span>
+          {onScreenLine}
           {state.notice.trim() && <span className="ctl-flag">Notice up</span>}
           {state.focus && <span className="ctl-focus">Phones: {state.focus === 'poll' ? 'poll' : 'ask'}</span>}
+        </p>
+        <div className="ctl-nav">
+          <button className="btn" disabled={busy} onClick={() => send({ type: 'prev' })}>Previous</button>
+          <button className="btn primary big" disabled={busy} onClick={() => send({ type: 'next' })}>
+            Next
+            {state.overlay ? <small>Back to the slides</small> : upNext && <small>{slotOf(upNext.id)?.label ?? ''} · {upNext.name}</small>}
+          </button>
         </div>
+        <div className="ctl-row interludes">
+          <button className={`btn ${state.overlay === 'video' ? 'on' : ''}`} onClick={() => send({ type: 'overlay', overlay: state.overlay === 'video' ? null : 'video' })}>
+            {state.overlay === 'video' ? 'Stop film' : 'Play film'}
+            <small>V on the laptop</small>
+          </button>
+          <button
+            className={`btn ${state.overlay === 'anthem' ? 'on' : ''}`}
+            onClick={() =>
+              state.overlay === 'anthem'
+                ? send({ type: 'overlay', overlay: null })
+                : confirm('Play the national anthem now?') && send({ type: 'overlay', overlay: 'anthem' })
+            }
+          >
+            {state.overlay === 'anthem' ? 'Stop anthem' : 'National anthem'}
+            <small>A A A on the laptop</small>
+          </button>
+          <button className={`btn ${state.overlay === 'sim' ? 'on' : ''}`} onClick={() => send({ type: 'overlay', overlay: state.overlay === 'sim' ? null : 'sim' })}>
+            {state.overlay === 'sim' ? 'Close simulation' : 'Simulation'}
+            <small>S on the laptop</small>
+          </button>
+          {state.overlay && (
+            <button className="btn primary" onClick={() => send({ type: 'overlay', overlay: null })}>
+              Back to slides
+              <small>Q / Esc</small>
+            </button>
+          )}
+        </div>
+        <div className="ctl-row">
+          <button className={`btn ${state.slideId === 'poll' ? 'on' : ''}`} onClick={() => send({ type: 'show', slideId: 'poll' })}>Poll results</button>
+          <button className={`btn ${state.slideId === 'questions' ? 'on' : ''}`} onClick={() => send({ type: 'show', slideId: 'questions' })}>Questions</button>
+          <button className={`btn ${state.slideId === 'ask' ? 'on' : ''}`} onClick={() => send({ type: 'show', slideId: 'ask' })}>Question prompt</button>
+          <button className={`btn ${state.feedbackOpen ? 'on' : ''}`} onClick={() => send({ type: 'feedback', open: !state.feedbackOpen })}>
+            {state.feedbackOpen ? 'Close feedback' : 'Open feedback'}
+          </button>
+          {state.returnTo && <button className="btn primary" onClick={() => send({ type: 'back' })}>Back to agenda</button>}
+        </div>
+        {err && <p className="ctl-error">{err}</p>}
       </section>
 
       <nav className="ctl-tabs" role="tablist" aria-label="Control sections">
@@ -149,56 +195,10 @@ function Console({ pin, health, photos, onLock }: { pin: string; health: Health;
           <button key={id} role="tab" aria-selected={tab === id} className={tab === id ? 'on' : ''} onClick={() => pick(id)}>
             {label}
             {id === 'polls' && state.poll.open && <span className="ctl-live" aria-label="voting open" />}
+            {id === 'notice' && state.notice.trim() && <span className="ctl-live" aria-label="notice showing" />}
           </button>
         ))}
       </nav>
-      </div>
-
-      {tab === 'live' && (
-        <>
-          <section className="ctl-section">
-            <h2>Put up, then return</h2>
-            <div className="ctl-row">
-              <button className={`btn ${state.slideId === 'poll' ? 'on' : ''}`} onClick={() => send({ type: 'show', slideId: 'poll' })}>Poll results</button>
-              <button className={`btn ${state.slideId === 'questions' ? 'on' : ''}`} onClick={() => send({ type: 'show', slideId: 'questions' })}>Questions</button>
-              <button className={`btn ${state.slideId === 'ask' ? 'on' : ''}`} onClick={() => send({ type: 'show', slideId: 'ask' })}>Question prompt</button>
-              {state.returnTo && <button className="btn primary" onClick={() => send({ type: 'back' })}>Back to agenda</button>}
-            </div>
-          </section>
-          <section className="ctl-section">
-            <h2>Interludes</h2>
-            <div className="ctl-row interludes">
-              <button className={`btn ${state.overlay === 'video' ? 'on' : ''}`} onClick={() => send({ type: 'overlay', overlay: state.overlay === 'video' ? null : 'video' })}>
-                {state.overlay === 'video' ? 'Stop film' : 'Play film'}
-                <small>V on the laptop</small>
-              </button>
-              <button
-                className={`btn ${state.overlay === 'anthem' ? 'on' : ''}`}
-                onClick={() =>
-                  state.overlay === 'anthem'
-                    ? send({ type: 'overlay', overlay: null })
-                    : confirm('Play the national anthem now?') && send({ type: 'overlay', overlay: 'anthem' })
-                }
-              >
-                {state.overlay === 'anthem' ? 'Stop anthem' : 'National anthem'}
-                <small>A A A on the laptop</small>
-              </button>
-              <button className={`btn ${state.overlay === 'sim' ? 'on' : ''}`} onClick={() => send({ type: 'overlay', overlay: state.overlay === 'sim' ? null : 'sim' })}>
-                {state.overlay === 'sim' ? 'Close simulation' : 'Simulation'}
-                <small>S on the laptop</small>
-              </button>
-              {state.overlay && (
-                <button className="btn primary" onClick={() => send({ type: 'overlay', overlay: null })}>
-                  Back to slides
-                  <small>Q / Esc</small>
-                </button>
-              )}
-            </div>
-          </section>
-          <NoticeSection notice={state.notice} send={send} />
-          <TimerSection endsAt={state.timer.endsAt} label={state.timer.label} now={now} send={send} />
-        </>
-      )}
 
       {tab === 'agenda' && (
         <Section title="Running order">
@@ -234,14 +234,15 @@ function Console({ pin, health, photos, onLock }: { pin: string; health: Health;
       {tab === 'polls' && <PollSection pin={pin} open={state.poll.open} openedAt={state.poll.openedAt} now={now} onScreen={state.slideId === 'poll'} send={send} />}
       {tab === 'questions' && <QuestionsSection pin={pin} shown={state.questions} onScreen={state.slideId === 'questions'} send={send} />}
 
+      {tab === 'notice' && (
+        <>
+          <NoticeSection notice={state.notice} send={send} />
+          <TimerSection endsAt={state.timer.endsAt} label={state.timer.label} now={now} send={send} />
+        </>
+      )}
+
       {tab === 'more' && (
         <>
-          <Section title="Feedback form">
-            <p className="ctl-muted">Opening it puts the form at the top of the audience page. It is always reachable from there.</p>
-            <button className={`btn ${state.feedbackOpen ? 'on' : ''}`} onClick={() => send({ type: 'feedback', open: !state.feedbackOpen })}>
-              {state.feedbackOpen ? 'Feedback is open: close' : 'Open feedback now'}
-            </button>
-          </Section>
           <Section title="Decks">
             <p className="ctl-muted">
               On the screen laptop, <b>D</b> opens the deck of the session on screen in a new tab; close the tab to return. The links also sit beside each session in Agenda.
@@ -258,30 +259,25 @@ function Console({ pin, health, photos, onLock }: { pin: string; health: Health;
               {state.decksPublished ? 'Decks are on the audience page: hide' : 'Share decks with the audience'}
             </button>
           </Section>
+          <Section title="Feedback form">
+            <p className="ctl-muted">Opening it (also above, under the screen) puts the form at the top of the audience page. It is always reachable from there.</p>
+            <button className={`btn ${state.feedbackOpen ? 'on' : ''}`} onClick={() => send({ type: 'feedback', open: !state.feedbackOpen })}>
+              {state.feedbackOpen ? 'Feedback is open: close' : 'Open feedback now'}
+            </button>
+          </Section>
           <ContentCheck photos={photos} />
           <DataSection pin={pin} send={send} />
         </>
       )}
-
-      <footer className="ctl-dock">
-        {err && <p className="ctl-error">{err}</p>}
-        <div className="ctl-nav">
-          <button className="btn" disabled={busy} onClick={() => send({ type: 'prev' })}>Previous</button>
-          <button className="btn primary big" disabled={busy} onClick={() => send({ type: 'next' })}>
-            Next
-            {state.overlay ? <small>Back to the slides</small> : upNext && <small>{slotOf(upNext.id)?.label ?? ''} · {upNext.name}</small>}
-          </button>
-        </div>
-      </footer>
     </main>
   );
 }
 
 const TABS = [
-  ['live', 'Live'],
   ['agenda', 'Agenda'],
   ['polls', 'Polls'],
   ['questions', 'Questions'],
+  ['notice', 'Notice'],
   ['more', 'More'],
 ] as const;
 type Tab = (typeof TABS)[number][0];
