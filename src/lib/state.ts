@@ -2,7 +2,7 @@
 // increments on every change so /screen can tell a new command from an old one.
 import { clockSlot, FIRST_SLIDE, slideById, slideIndex, slides, slotById, type Poll, type Slot } from './event';
 
-export type Overlay = 'video' | 'sim' | null;
+export type Overlay = 'video' | 'anthem' | 'sim' | null;
 /** What the room is being asked to do on /join; set by control actions, cleared by moving on. */
 export type Focus = 'poll' | 'ask' | null;
 export type ShownQuestion = { id: string; text: string; name?: string; role?: string; org?: string };
@@ -73,7 +73,7 @@ function withFocus(prev: LiveState, next: LiveState, a: Action): LiveState {
   const kind = slideById(next.slideId)?.kind;
   let focus = prev.focus;
   if (a.type === 'poll') focus = a.open ? 'poll' : kind === 'poll' ? 'poll' : null;
-  else if (next.slideId !== prev.slideId || a.type === 'show' || a.type === 'go') focus = kind === 'poll' ? 'poll' : kind === 'questions' ? 'ask' : null;
+  else if (next.slideId !== prev.slideId || a.type === 'show' || a.type === 'go') focus = kind === 'poll' ? 'poll' : kind === 'questions' || kind === 'ask' ? 'ask' : null;
   if (a.type === 'reset') focus = null;
   return focus === next.focus ? next : { ...next, focus };
 }

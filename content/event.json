@@ -11,20 +11,22 @@
   },
 
   "people": {
-    "manasa-krishna": { "name": "Manasa Krishna", "title": "Chief Brand Officer", "org": "Campx", "bio": "" },
+    "manasa-krishna": { "name": "Manasa Krishna", "title": "Chief Brand Officer", "org": "Campx", "bio": "", "photo": false },
     "balakista-reddy": { "name": "Prof. (Dr.) V. Balakista Reddy", "title": "Chairman", "org": "Telangana Council of Higher Education", "bio": "" },
     "srikanth-yellapragada": { "name": "Srikanth Yellapragada", "title": "Chief Technology Officer", "org": "Campx", "bio": "" },
     "venkat-yellapragada": { "name": "Venkat Yellapragada", "title": "Founder and CEO", "org": "Campx", "bio": "" },
-    "kumar-molugaram": { "name": "Prof. Kumar Molugaram", "title": "Vice Chancellor", "org": "Osmania University", "bio": "" },
-    "csrk-prasad": { "name": "Prof. C.S.R.K. Prasad", "title": "Vice Chancellor", "org": "JNTU Kakinada", "bio": "" },
     "a-damodaram": { "name": "Prof. A. Damodaram", "title": "Rector", "org": "JNTU Hyderabad", "bio": "" },
-    "paruchuri-venkateswara-rao": { "name": "Paruchuri Venkateswara Rao", "title": "Vice Chancellor", "org": "Siddhartha Academy of Higher Education", "bio": "" },
     "pardha-saradhi-varma": { "name": "G. Pardha Saradhi Varma", "title": "Vice Chancellor", "org": "KL Deemed to be University", "bio": "" },
     "archana-mantri": { "name": "Dr. Archana Mantri", "title": "Vice Chancellor", "org": "Anurag University", "bio": "" },
     "chandra-sekhar": { "name": "Dr. U. Chandra Sekhar", "title": "Vice Chancellor", "org": "Godavari Global University", "bio": "" },
-    "krishna-chalam": { "name": "RVR Krishna Chalam", "title": "Vice Chancellor", "org": "MNR University", "bio": "" },
+    "vsk-reddy": { "name": "Dr. V. S. K. Reddy", "title": "Vice Chancellor", "org": "Malla Reddy University", "bio": "" },
+    "guda-sridevi": { "name": "Prof. (Dr.) Guda Sridevi", "title": "Pro Vice Chancellor", "org": "C. V. Raman Global University, Odisha", "bio": "" },
+    "kl-narayana": { "name": "Prof. K. L. Narayana", "title": "Director, IcfaiTech", "org": "IFHE Hyderabad", "bio": "" },
+    "ravi-kumar-jain": { "name": "Dr. Ravi Kumar Jain", "title": "Ex Vice Chancellor, IILM University, Gurugram", "org": "Educationist", "bio": "" },
+    "hps-dhami": { "name": "Dr. H. P. S. Dhami", "title": "Executive Dean", "org": "Lamrin Tech Skills University, Punjab", "bio": "" },
     "bala-nagendra-prasad": { "name": "Dr. Bala Nagendra Prasad", "title": "Product Head", "org": "Campx", "bio": "" },
-    "ravikumar-pothineni": { "name": "Ravikumar Pothineni", "title": "", "org": "Winnify", "bio": "" },
+    "ravikiran-pothineni": { "name": "Ravikiran Pothineni", "title": "Founder and CEO", "org": "Winnify", "bio": "" },
+    "surya-nigam": { "name": "Surya Nigam", "title": "AI Sales Specialist", "org": "", "bio": "" },
     "siddharth-dalwadi": { "name": "Siddharth Dalwadi", "title": "Regional Head, South (EdTech and Education)", "org": "Google", "bio": "" },
     "ketansrisai-kondabathula": { "name": "Ketansrisai Kondabathula", "title": "Co-founder and Chief Business Officer", "org": "Campx", "bio": "" }
   },
@@ -37,25 +39,31 @@
     {
       "id": "welcome", "start": "09:30", "end": "09:45", "kind": "talk",
       "label": "Welcome Address", "title": "Welcome Address",
+      "headline": "Welcome to\n{next} 1.0",
       "speakers": ["manasa-krishna"], "topics": []
     },
     {
       "id": "address", "start": "09:45", "end": "10:15", "kind": "talk",
-      "label": "Address and Felicitation", "title": "Address and Felicitation",
+      "askAfter": true,
+      "label": "Guest of Honour Address", "title": "AI Forward Academics",
+      "anthem": true,
+      "askAfterAnthem": true,
       "speakers": ["balakista-reddy"], "topics": []
     },
     {
       "id": "keynote-1", "start": "10:30", "end": "11:15", "kind": "talk",
-      "label": "Campx Keynote 1", "title": "AI Forward Academics",
+      "askAfter": true,
+      "label": "Campx Keynote 1", "title": "Next Generation Academic Ecosystem",
       "speakers": ["srikanth-yellapragada"],
       "topics": ["AI Assisted Digital Evaluation", "Tablet-based Examinations", "AI Content Studio", "Learning Management System"]
     },
     {
       "id": "panel", "start": "11:30", "end": "12:20", "kind": "panel",
+      "askAfter": true,
       "label": "Leadership Panel", "title": "Leading with AI, Anchored in Values",
       "subtitle": "What Changes, What Must Not",
       "moderator": "venkat-yellapragada",
-      "speakers": ["kumar-molugaram", "csrk-prasad", "a-damodaram", "paruchuri-venkateswara-rao", "pardha-saradhi-varma", "archana-mantri", "chandra-sekhar", "krishna-chalam"]
+      "speakers": ["a-damodaram", "vsk-reddy", "pardha-saradhi-varma", "archana-mantri", "chandra-sekhar", "guda-sridevi", "kl-narayana", "ravi-kumar-jain", "hps-dhami"]
     },
     {
       "id": "short-break", "start": "12:20", "end": "12:30", "kind": "break",
@@ -63,37 +71,44 @@
     },
     {
       "id": "keynote-2", "start": "12:30", "end": "13:00", "kind": "talk",
-      "label": "Campx Keynote 2", "title": "One Campus, One Truth",
-      "deck": { "title": "One Campus, One Truth", "url": "https://claude.ai/artifact/1dmjKSZRKJkGVAuzk8t3H4?sk=4C1ICv2omuxDGnYIz6hBlQ" },
+      "askAfter": true,
+      "label": "Campx Keynote 2", "title": "Next Generation Accreditations Management",
+      "deck": { "title": "Next Generation Accreditation", "url": "https://claude.ai/artifact/1dmjKSZRKJkGVAuzk8t3H4?sk=4C1ICv2omuxDGnYIz6hBlQ" },
       "speakers": ["bala-nagendra-prasad"],
-      "topics": ["IQAC and accreditation", "NEP 2020", "A student's day", "A single source of truth", "AI with faculty in control"]
+      "topics": ["Data-driven accreditation", "One connected record", "Evidence that collects itself", "Ready before the visit", "AI with people in control"]
     },
     {
       "id": "winnify", "start": "13:00", "end": "13:15", "kind": "talk",
+      "askAfter": true,
       "label": "Partner session", "title": "Communication Intelligence Platform",
       "subtitle": "Winnify, Campx Partner",
-      "speakers": ["ravikumar-pothineni"], "topics": []
+      "speakers": ["ravikiran-pothineni"], "topics": []
     },
     {
       "id": "lunch", "start": "13:15", "end": "14:00", "kind": "break",
+      "askAfter": true,
       "label": "Lunch", "title": "Lunch", "subtitle": "We resume at 14:15 with the Google keynote."
     },
     {
       "id": "google", "start": "14:15", "end": "14:45", "kind": "talk",
-      "label": "Google Keynote", "title": "GCDC 4.0",
-      "speakers": ["siddharth-dalwadi"], "topics": []
+      "askAfter": true,
+      "label": "Google Keynote", "title": "DCGC 4.0",
+      "subtitle": "Digital Campus on Google Cloud",
+      "speakers": ["surya-nigam", "siddharth-dalwadi"],
+      "topics": ["Get Agentic AI ready", "World-class curriculum on Google Skills", "Globally recognised credentials", "Careers in AI and cloud"]
     },
     {
       "id": "keynote-3", "start": "14:50", "end": "15:20", "kind": "talk",
+      "askAfter": true,
       "label": "Campx Keynote 3", "title": "Unified AI Driven Campus Operations",
       "deck": { "title": "Unified AI Driven Campus Operations", "url": "https://claude.ai/artifact/DXsuBLZCWvovE8Gv9Jt7x5?sk=IOmrVbsD1mLwAv7oULnk3w" },
-      "speakers": ["ketansrisai-kondabathula"], "topics": []
+      "speakers": ["ketansrisai-kondabathula"],
+      "topics": ["Every campus process on one platform", "One command centre for leadership", "Medha across every function", "The first 100 days"]
     },
     {
       "id": "open-forum", "start": "15:30", "end": "16:00", "kind": "forum",
       "label": "Open Forum", "title": "Answers",
-      "byline": "Campx leadership team", "speakers": [],
-      "subtitle": "Ask from your phone. Scan the code."
+      "byline": "Campx leadership team", "speakers": ["venkat-yellapragada", "srikanth-yellapragada", "ketansrisai-kondabathula"]
     },
     {
       "id": "high-tea", "start": "16:00", "end": "16:15", "kind": "break",
@@ -107,6 +122,7 @@
     {
       "id": "closing", "start": "17:10", "end": "18:00", "kind": "talk",
       "label": "Closing Note and Felicitation", "title": "Closing Note and Felicitation",
+      "headline": "Thank you.\nHappy Diwali.",
       "speakers": ["manasa-krishna"], "topics": []
     }
   ],
@@ -141,6 +157,10 @@
 
   "interludes": {
     "video": { "title": "NEXT teaser film", "src": "/media/next-feature.mp4", "poster": "/media/next-feature-poster.jpg" },
+    "anthem": {
+      "title": "Jana Gana Mana",
+      "youtube": "HtMF973tXIY"
+    },
     "simulation": { "title": "Campx AI-University", "url": "/sim/index.html" }
   },
 

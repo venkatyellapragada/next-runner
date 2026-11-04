@@ -10,7 +10,8 @@ Third pass (3 Nov, evening). Built on two sources:
 - White ground, near-black ink, one working colour: **indigo**. Eyebrows, rules, markers, progress, the "now".
 - The coral → magenta → indigo **brand gradient** is the signature and is rationed: **one gradient element per
   slide** (the opening cover, or the hero countdown). Never two.
-- One family, **Hanken Grotesk**: display 800, headings 700, sub-heads 600, body 400. **JetBrains Mono** is the
+- One family, **Google Sans** (self-hosted, `public/fonts/google-sans.woff2`, weights 400–700): display and headings 700,
+  sub-heads 600, body 400; an 800 in the code renders as 700. **JetBrains Mono** is the
   second voice for eyebrows (`§ 03 · CAMPX KEYNOTE 1`), labels and the clock's meta. No italics.
 - Sentence case. The middot `·` separates meta. Tabular figures. No exclamation marks, no emoji.
 - Cards: 1 px `rule` border, 14 px radius, no shadows. Tinted panels in `bg-2`.
@@ -18,7 +19,7 @@ Third pass (3 Nov, evening). Built on two sources:
 ## Rules taken from Claude's decks
 - Margins 128 px left and right; the eyebrow and heading sit at the top margin, never centred with the body.
 - One idea per slide; a statement or a big number beats a list.
-- Two grounds (white and `bg-2`) and one accent statement slide (the gradient cover).
+- One ground, white, on every slide (breaks included), and one accent statement slide (the gradient cover).
 - One type scale of five sizes; emphasis by weight or the indigo, not by a new size.
 - One footer row: now, next, the QR.
 
@@ -26,7 +27,7 @@ Third pass (3 Nov, evening). Built on two sources:
 | Token | Hex | Use |
 |---|---|---|
 | `--paper` | `#FFFFFF` | every slide ground; /join and /control |
-| `--bg-2` | `#F1F3FA` | break slides, panels (QR panel, cards on /join) |
+| `--bg-2` | `#F1F3FA` | panels (QR panel, cards on /join) |
 | `--ink` | `#0A0A0A` | headings and body |
 | `--ink-2` | `#525252` | secondary text (7.8:1) |
 | `--ink-3` | `#737373` | eyebrow labels, meta, footer (4.7:1) |

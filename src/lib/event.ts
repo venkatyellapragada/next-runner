@@ -1,6 +1,7 @@
 import raw from '../../content/event.json';
 
-export type Person = { name: string; title: string; org: string; bio: string };
+/** `photo: false`: shown without a picture or initials tile. */
+export type Person = { name: string; title: string; org: string; bio: string; photo?: false };
 export type SlotKind = 'holding' | 'talk' | 'panel' | 'break' | 'forum';
 export type Slot = {
   id: string;
@@ -14,6 +15,14 @@ export type Slot = {
   speakers?: string[];
   moderator?: string;
   topics?: string[];
+  /** A statement for a speaker shown without a photo; "\n" breaks the line, the last line is set in indigo, `{next}` draws the NEXT logo. */
+  headline?: string;
+  /** Open the slot with the "Please rise" slide; the anthem itself plays as an interlude (A). */
+  anthem?: boolean;
+  /** Close the slot with the "send your questions for the Open Forum" slide (QR to the Ask form). */
+  askAfter?: boolean;
+  /** The same slide right after the anthem, before the slot's intro. */
+  askAfterAnthem?: boolean;
   /** The speaker's deck (a link), opened with D on the screen laptop and shared on /join when published. */
   deck?: { title: string; url: string };
 };
@@ -37,6 +46,7 @@ export type EventData = {
   decks: { note: string; links: DeckLink[] };
   interludes: {
     video: { title: string; src: string; poster: string };
+    anthem: { title: string; youtube: string };
     simulation: { title: string; url: string };
   };
 };
@@ -48,7 +58,7 @@ export const seedPolls: Poll[] = data.polls;
 
 // ── Slides ────────────────────────────────────────────────────────────────
 // Derived from the agenda. The order here is the order "Next" walks through.
-export type SlideKind = 'holding' | 'transition' | 'speaker' | 'panel' | 'break' | 'questions' | 'poll';
+export type SlideKind = 'holding' | 'anthem' | 'transition' | 'ask' | 'speaker' | 'panel' | 'break' | 'questions' | 'poll';
 export type Slide = { id: string; kind: SlideKind; slotId: string | null; name: string };
 
 const perSlot: Record<SlotKind, SlideKind[]> = {
@@ -56,10 +66,12 @@ const perSlot: Record<SlotKind, SlideKind[]> = {
   talk: ['transition', 'speaker'],
   panel: ['transition', 'panel'],
   break: ['break'],
-  forum: ['transition', 'questions'],
+  forum: ['transition'],
 };
 const slideName: Record<SlideKind, string> = {
   holding: 'Holding',
+  anthem: 'National anthem',
+  ask: 'Open Forum questions',
   transition: 'Intro',
   speaker: 'Speaker',
   panel: 'Panel',
@@ -68,9 +80,15 @@ const slideName: Record<SlideKind, string> = {
   poll: 'Poll results',
 };
 
-export const slides: Slide[] = agenda.flatMap((slot) =>
-  perSlot[slot.kind].map((kind) => ({ id: `${slot.id}:${kind}`, kind, slotId: slot.id, name: slideName[kind] })),
-);
+export const slides: Slide[] = agenda.flatMap((slot) => {
+  const run: [SlideKind, string][] = [
+    ...(slot.anthem ? [['anthem', 'anthem'] as [SlideKind, string]] : []),
+    ...(slot.anthem && slot.askAfterAnthem ? [['ask', 'ask-early'] as [SlideKind, string]] : []),
+    ...perSlot[slot.kind].map((k) => [k, k] as [SlideKind, string]),
+    ...(slot.askAfter ? [['ask', 'ask'] as [SlideKind, string]] : []),
+  ];
+  return run.map(([kind, key]) => ({ id: `${slot.id}:${key}`, kind, slotId: slot.id, name: slideName[kind] }));
+});
 
 /** Slides that are not part of the running order; /control puts them up and returns. */
 export const POLL_SLIDE: Slide = { id: 'poll', kind: 'poll', slotId: null, name: 'Poll results' };

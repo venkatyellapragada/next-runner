@@ -1,8 +1,8 @@
 /* Tokens from DESIGN.md (the Campx Design System). Change them there first. */
 @font-face {
-  font-family: 'Hanken Grotesk';
-  src: url('/fonts/hanken-grotesk.woff2') format('woff2');
-  font-weight: 300 900;
+  font-family: 'Google Sans';
+  src: url('/fonts/google-sans.woff2') format('woff2');
+  font-weight: 400 700;
   font-display: block;
 }
 @font-face {
@@ -26,8 +26,8 @@
   --brand-gradient: linear-gradient(135deg, #c24548, #822c79, #1e027f);
   --ok: #5d7832;
   --danger: #dc2626;
-  --display: 'Hanken Grotesk', ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --text: 'Hanken Grotesk', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --display: 'Google Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --text: 'Google Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
   --mono: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
   --radius: 10px;
   /* Names the components use, mapped onto the system. */

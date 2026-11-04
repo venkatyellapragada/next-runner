@@ -15,13 +15,14 @@ Live site: **https://next-runner.vercel.app** (`<site>` below). PIN = the `CONTR
 | → / PageDown / Space | next slide (a clicker works) |
 | ← / PageUp | previous slide |
 | **V** | play the NEXT film full screen (loops, with sound) |
+| **A** | play the national anthem (Jana Gana Mana, from YouTube) full screen, once |
 | **S** | open the Campx AI-University simulation full screen |
 | **Q** or **Esc** | back to the slides (inside the simulation use **Q**; its own Esc flies the camera home) |
 | **D** | open the deck of the session on screen in a new tab (Keynote 2 and Keynote 3 have one); close the tab to return |
 | M | film sound on/off |
 | F | full screen |
 
-The phone does the same from /control: **Play film**, **Simulation**, **Back to slides**.
+The phone does the same from /control: **Play film**, **National anthem**, **Simulation**, **Back to slides**.
 Use the film before 09:30 and in breaks; the simulation in breaks and at lunch. Inside the
 simulation: **T** opens the guided tours, **1–8** plays one, **A** plays all eight (about 6 min).
 
@@ -38,17 +39,19 @@ simulation: **T** opens the guided tours, **1–8** plays one, **A** plays all e
 1. AV laptop: power plugged in, sleep and notifications off, display 1920×1080. Open `<site>/screen?pin=PIN` in Chrome, press **F** for full screen. The clock in the corner must match your phone.
 2. Operator phone: open `/control`, enter PIN. Green dot = live. Tap *Registrations → Holding*.
 3. Check: tap Next on the phone, the screen changes within 2 seconds; tap Previous to go back.
-4. Press **V** once on the laptop (this also unlocks sound for the day), check the film plays with sound through the hall speakers, press **Esc**. Press **S**, click once inside the simulation, check it moves smoothly, press **Q**.
+4. Press **V** once on the laptop (this also unlocks sound for the day), check the film plays with sound through the hall speakers, press **Esc**. Press **A**, check the anthem starts with sound (it streams from YouTube, so this also checks the venue internet), press **Esc**. Press **S**, click once inside the simulation, check it moves smoothly, press **Q**.
 5. Until 09:30: leave the film looping (**V**) or the *Registrations* holding screen up.
 
 ## Running the day
 - **Each session:** after the previous one ends, tap **Next** → *Intro* slide (title, speaker, countdown to start). When the speaker walks up, **Next** → *Speaker* slide. The AV desk then switches to the speaker's PowerPoint and back to this window when they finish.
+- **Open Forum questions:** *Questions for the Open Forum?* (large QR) comes right after the National Anthem, after every session up to lunch, when lunch ends, and after the Google Keynote and Campx Keynote 3, i.e. up to the Open Forum. Leave it up while Manasa reminds the room to scan and send questions; phones that have /join open jump to the Ask form. Then **Next** as usual. The questions collect in /control → *Questions* for the Open Forum at 15:30.
+- **National anthem (09:45):** after the Welcome Address, **Next** lands on *Please rise for the National Anthem*. Once the hall is standing, press **A** (or *National anthem* on the phone). It plays once; when it ends press **Esc** (click outside the video first if you clicked on it), then **Next** → the Guest of Honour *Intro* slide.
 - **Breaks, lunch, high tea:** **Next** lands on the holding screen with a countdown to the restart.
 - **Timer:** /control → *Timer*: pick a label (*We resume in*, *Starting in*, *Lunch ends in*, *Session ends in*), then 2/5/10/15/30 min or type minutes and *Start timer*. It counts down on every slide: as the big number on intro, break and opening slides, as a pill at the top on the others. *Stop timer* returns to the schedule; it also clears itself a minute after it ends.
 - **Announcements:** *Notice band* → pick a preset or type one → Show. Clear it after a minute.
 - **Pulse poll (4 questions):** /control → *Pulse poll* → **Open voting**. Phones go through all four questions one after another (one answer per question per phone); the Ask button appears only after the last answer. **Show results on screen** puts all four questions up with percentages; *Back to agenda* returns. **Close voting** freezes the result. *Add a question* adds one to the set during the day (removable); *Clear votes* clears every question.
 - **Phones follow the screen:** opening voting or showing results sends /join to the poll; the questions slide or the Open Forum sends it to the Ask form; any other slide returns it to the normal page. The QR on the results slide opens the poll, the one on the questions slide opens the form; other slides carry one general QR.
-- **Open Forum (15:30):** questions arrive under *Questions*, newest first. Nothing reaches the screen until you tap **Put on screen**. The first one is shown large, up to three more as the queue. **Answered** removes it. **Hide** removes an unsuitable one from your list. Questions can also be shown during any session: *Questions* button at the top.
+- **Open Forum (15:30):** the screen shows only the *Open Forum* slide; there is no questions slide in the running order. The questions sent during the day are in /control → *Questions* (newest first) for whoever reads them out; **Answered** and **Hide** tidy the list.
 - **Feedback:** *Open feedback now* at the start of Keynote 4 (16:20). It moves the form to the top of everyone's audience page.
 - **Decks (Keynote 2, Bala; Keynote 3, Ketan):** they are claude.ai decks, so they open in a browser tab. On the screen laptop, with that session's intro or speaker slide up, press **D**: the deck opens in a new tab; present it from there and close the tab to come back to the runner. /control → *Decks* (and *Open deck* beside each session) has the same links for a presenter's laptop.
 - **Sharing decks:** after the talks, /control → *Decks* → **Share decks with the audience** puts the links on /join (Agenda and Presentations). Off until then.

@@ -1,6 +1,6 @@
 import { initials, person } from '@/lib/event';
 
-/** A person's photo, or their initials on a quiet tile until public/people/<id>.jpg exists. */
+/** A person's photo, or their initials on a quiet tile until public/people/<id>.jpg exists; nothing for `photo: false`. */
 export function Avatar({
   id,
   photos,
@@ -15,6 +15,7 @@ export function Avatar({
   round?: boolean;
 }) {
   const p = person(id);
+  if (p.photo === false) return null;
   const src = photos[id];
   const style: React.CSSProperties = {
     width,

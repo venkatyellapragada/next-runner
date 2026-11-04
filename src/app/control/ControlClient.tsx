@@ -113,7 +113,9 @@ function Console({ pin, health, photos, onLock }: { pin: string; health: Health;
           <span className="ctl-eyebrow">On screen</span>
           {state.overlay === 'video'
             ? 'The NEXT film'
-            : state.overlay === 'sim'
+            : state.overlay === 'anthem'
+              ? 'The national anthem'
+              : state.overlay === 'sim'
               ? 'The simulation'
               : slotOf(state.slideId)
                 ? `${slotOf(state.slideId)!.label} · ${slide.name}`
@@ -131,6 +133,10 @@ function Console({ pin, health, photos, onLock }: { pin: string; health: Health;
           <button className={`btn ${state.overlay === 'video' ? 'on' : ''}`} onClick={() => send({ type: 'overlay', overlay: state.overlay === 'video' ? null : 'video' })}>
             {state.overlay === 'video' ? 'Stop film' : 'Play film'}
             <small>V on the laptop</small>
+          </button>
+          <button className={`btn ${state.overlay === 'anthem' ? 'on' : ''}`} onClick={() => send({ type: 'overlay', overlay: state.overlay === 'anthem' ? null : 'anthem' })}>
+            {state.overlay === 'anthem' ? 'Stop anthem' : 'National anthem'}
+            <small>A on the laptop</small>
           </button>
           <button className={`btn ${state.overlay === 'sim' ? 'on' : ''}`} onClick={() => send({ type: 'overlay', overlay: state.overlay === 'sim' ? null : 'sim' })}>
             {state.overlay === 'sim' ? 'Close simulation' : 'Simulation'}
@@ -496,7 +502,7 @@ function NoticeSection({ notice, send }: { notice: string; send: Send }) {
 }
 
 function ContentCheck({ photos }: { photos: Record<string, string> }) {
-  const missingPhoto = Object.keys(people).filter((id) => !photos[id]);
+  const missingPhoto = Object.keys(people).filter((id) => people[id].photo !== false && !photos[id]);
   const missingBio = Object.entries(people).filter(([, p]) => !p.bio).map(([id]) => id);
   return (
     <Section title="Content check">

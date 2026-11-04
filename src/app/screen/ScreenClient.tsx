@@ -10,7 +10,8 @@ import { activeSlot, initialState, reduce, type Action, type Overlay } from '@/l
 // The projector page. Follows /control through /api/state. If the network dies it keeps the
 // last state, the clock keeps running, and the keyboard (or a USB clicker) still drives it:
 //   → / PageDown / Space   next            ← / PageUp   previous
-//   V   play the NEXT film        S   show the simulation        Q / Esc   back to the slides
+//   V   play the NEXT film        A   play the national anthem   S   show the simulation
+//   Q / Esc   back to the slides
 //   M   sound on/off (film)       F   full screen         D   open this session's deck in a new tab
 // Open once as /screen?pin=XXXX and the keyboard also moves /control's state.
 // Testing: ?at=10:25 freezes the clock, ?slide=keynote-1:speaker forces a slide.
@@ -51,6 +52,7 @@ export default function ScreenClient({ photos }: { photos: Record<string, string
       if (['arrowright', 'pagedown', ' ', 'enter'].includes(k)) action = { type: 'next' };
       else if (['arrowleft', 'pageup', 'backspace'].includes(k)) action = { type: 'prev' };
       else if (k === 'v') action = { type: 'overlay', overlay: state.overlay === 'video' ? null : 'video' };
+      else if (k === 'a') action = { type: 'overlay', overlay: state.overlay === 'anthem' ? null : 'anthem' };
       else if (k === 's') action = { type: 'overlay', overlay: state.overlay === 'sim' ? null : 'sim' };
       else if (k === 'escape' || k === 'q') action = state.overlay ? { type: 'overlay', overlay: null } : null;
       else if (k === 'f') document.documentElement.requestFullscreen?.().catch(() => {});
@@ -122,8 +124,8 @@ export default function ScreenClient({ photos }: { photos: Record<string, string
   );
 }
 
-/** The film or the simulation, full bleed over the slides. */
-function Interlude({ kind, onClose }: { kind: 'video' | 'sim'; onClose: () => void }) {
+/** The film, the anthem or the simulation, full bleed over the slides. */
+function Interlude({ kind, onClose }: { kind: Exclude<Overlay, null>; onClose: () => void }) {
   const video = useRef<HTMLVideoElement>(null);
   const frame = useRef<HTMLIFrameElement>(null);
   // The simulation is served from this site (/sim), so its keys can be watched too: Q leaves it.
@@ -140,7 +142,7 @@ function Interlude({ kind, onClose }: { kind: 'video' | 'sim'; onClose: () => vo
   };
   const [hint, setHint] = useState(true);
   const [muted, setMuted] = useState(false);
-  const { video: film, simulation } = data.interludes;
+  const { video: film, anthem, simulation } = data.interludes;
 
   useEffect(() => {
     let t = setTimeout(() => setHint(false), 3000);
@@ -181,6 +183,14 @@ function Interlude({ kind, onClose }: { kind: 'video' | 'sim'; onClose: () => vo
     <div className={`interlude${hint ? ' show-hint' : ''}`}>
       {kind === 'video' ? (
         <video ref={video} src={film.src} poster={film.poster} loop playsInline preload="auto" />
+      ) : kind === 'anthem' ? (
+        // Played once from YouTube, so it needs the venue's internet. Sound follows the same rule as the film:
+        // a key pressed on this page earlier in the day lets it start with sound.
+        <iframe
+          src={`https://www.youtube-nocookie.com/embed/${anthem.youtube}?autoplay=1&rel=0&playsinline=1&modestbranding=1`}
+          title={anthem.title}
+          allow="autoplay; encrypted-media; fullscreen"
+        />
       ) : simulation.url ? (
         <iframe ref={frame} onLoad={watchFrame} src={simulation.url} title={simulation.title} allow="fullscreen; autoplay; clipboard-write" />
       ) : (
@@ -190,8 +200,8 @@ function Interlude({ kind, onClose }: { kind: 'video' | 'sim'; onClose: () => vo
           content/event.json → interludes.simulation.url
         </div>
       )}
-      <button className="close" onClick={onClose}>Back to slides · {kind === 'video' ? 'Esc' : 'Q'}</button>
-      <div className="hint">{kind === 'video' ? (muted ? 'Sound off · press M' : 'M mutes · Esc returns') : 'Q returns to the slides'}</div>
+      <button className="close" onClick={onClose}>Back to slides · {kind === 'sim' ? 'Q' : 'Esc'}</button>
+      <div className="hint">{kind === 'video' ? (muted ? 'Sound off · press M' : 'M mutes · Esc returns') : kind === 'anthem' ? 'Esc returns (click outside the video first)' : 'Q returns to the slides'}</div>
     </div>
   );
 }
