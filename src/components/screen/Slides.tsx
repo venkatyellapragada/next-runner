@@ -573,7 +573,7 @@ function PollBars({ q, size = 24 }: { q: PollResult; size?: number }) {
         const share = total ? counts[i] / total : 0;
         const lead = total > 0 && counts[i] === max;
         return (
-          <div key={o} style={{ display: 'grid', gridTemplateColumns: '1fr 32% 76px', alignItems: 'center', gap: 16 }}>
+          <div key={o} style={{ display: 'grid', gridTemplateColumns: `1fr 32% ${Math.round(size * 3)}px`, alignItems: 'center', gap: 16 }}>
             <p className="clamp1" style={{ margin: 0, fontSize: size, fontWeight: lead ? 700 : 400, color: lead ? 'var(--ink)' : 'var(--ink-2)' }}>{o}</p>
             <div style={{ height: size / 2, background: 'var(--bg-2)', borderRadius: size / 4, overflow: 'hidden' }}>
               <div className="bar-fill" style={{ height: '100%', width: `${share * 100}%`, background: lead ? 'var(--indigo)' : 'var(--rule-strong)' }} />
@@ -607,7 +607,7 @@ function PollLoop({ slot, state, now, polls, joinUrl, print }: ScreenProps & { s
         </div>
       </div>
       <div style={{ flex: 'none', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-        <QrPanel joinUrl={withFocus(joinUrl, 'poll')} line={state.poll.open ? 'Scan to vote' : 'Voting closed'} size={360} />
+        <QrPanel joinUrl={withFocus(joinUrl, 'poll')} line={print || state.poll.open ? 'Scan to vote' : 'Voting closed'} size={360} />
         <p className="heading" style={{ fontSize: 36, fontVariantNumeric: 'tabular-nums' }}>{back}</p>
       </div>
     </div>

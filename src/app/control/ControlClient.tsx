@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Fit } from '@/components/Fit';
 import { joinUrlFor } from '@/components/bits';
 import { Screen } from '@/components/screen/Slides';
-import { agenda, allDecks, people, slideById, slideIndex, slides, type Poll } from '@/lib/event';
+import { agenda, allDecks, FIRST_SLIDE, people, slideById, slideIndex, slides, type Poll } from '@/lib/event';
 import { control, getPin, setPin, useLive, useNow } from '@/lib/live';
 import type { Action } from '@/lib/state';
 import './control.css';
@@ -85,7 +85,7 @@ function Console({ pin, health, photos, onLock }: { pin: string; health: Health;
 
   if (!data) return <main className="ctl"><p className="ctl-muted">Connecting…</p></main>;
   const { state, polls } = data;
-  const slide = slideById(state.slideId)!;
+  const slide = slideById(state.slideId) ?? slideById(FIRST_SLIDE)!;
   const i = slideIndex(state.slideId);
   const upNext = i >= 0 ? slides[i + 1] : slideById(state.returnTo);
   const slotOf = (id: string | null | undefined) => agenda.find((s) => s.id === slideById(id)?.slotId);

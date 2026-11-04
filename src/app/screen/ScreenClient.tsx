@@ -201,7 +201,7 @@ function Interlude({ kind, onClose }: { kind: Exclude<Overlay, null>; onClose: (
         </div>
       )}
       <button className="close" onClick={onClose}>Back to slides · {kind === 'sim' ? 'Q' : 'Esc'}</button>
-      <div className="hint">{kind === 'video' ? (muted ? 'Sound off · press M' : 'M mutes · Esc returns') : kind === 'anthem' ? 'Esc returns (click outside the video first)' : 'Q returns to the slides'}</div>
+      <div className="hint">{kind === 'video' ? (muted ? 'Sound off · press M' : 'M mutes · Esc returns') : kind === 'anthem' ? 'Esc returns · if you clicked the video, use the button above or /control' : 'Q returns to the slides'}</div>
     </div>
   );
 }

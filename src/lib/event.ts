@@ -89,7 +89,9 @@ export const slides: Slide[] = agenda.flatMap((slot) => {
     ...perSlot[slot.kind].map((k) => [k, k] as [SlideKind, string]),
     ...(slot.askAfter ? [['ask', 'ask'] as [SlideKind, string]] : []),
   ];
-  return run.map(([kind, key]) => ({ id: `${slot.id}:${key}`, kind, slotId: slot.id, name: slideName[kind] }));
+  const name = (kind: SlideKind, key: string) =>
+    key === 'ask-early' ? 'Questions (after anthem)' : kind === 'break' && slot.pollLoop ? 'Pulse poll' : slideName[kind];
+  return run.map(([kind, key]) => ({ id: `${slot.id}:${key}`, kind, slotId: slot.id, name: name(kind, key) }));
 });
 
 /** Slides that are not part of the running order; /control puts them up and returns. */

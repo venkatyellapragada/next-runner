@@ -80,8 +80,15 @@ function withFocus(prev: LiveState, next: LiveState, a: Action): LiveState {
 
 export function reduce(s: LiveState, a: Action, now: number): LiveState {
   let next = step(s, a, now);
-  // Arriving on the lunch poll opens voting, so the room can answer while the questions play.
-  if (next !== s && next.slideId !== s.slideId && isPollLoop(next.slideId) && !next.poll.open) next = { ...next, poll: { open: true } };
+  // The lunch poll opens voting when the room walks onto it from another session, and closes it when the room
+  // walks on to the next one. Moves within lunch, or through poll results/questions and back, leave it alone,
+  // so a hand-closed poll stays closed and the votes stop being fetched on every refresh after lunch.
+  if (next !== s && next.slideId !== s.slideId && slideIndex(s.slideId) >= 0 && slideIndex(next.slideId) >= 0) {
+    const from = slideById(s.slideId)?.slotId;
+    const to = slideById(next.slideId)?.slotId;
+    if (from !== to && isPollLoop(next.slideId) && !next.poll.open) next = { ...next, poll: { open: true } };
+    else if (from !== to && slotById(from)?.pollLoop && next.poll.open) next = { ...next, poll: { open: false } };
+  }
   return next === s ? s : withFocus(s, next, a);
 }
 

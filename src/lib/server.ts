@@ -43,8 +43,18 @@ export async function payload(): Promise<StatePayload> {
   const out: StatePayload = { state, now: Date.now() };
   const polls = await allPolls();
   const withVotes = state.poll.open || state.slideId === 'poll' || isPollLoop(state.slideId);
-  out.polls = withVotes ? await Promise.all(polls.map(async (p) => ({ ...p, votes: await loadVotes(p) }))) : polls;
+  out.polls = withVotes ? await votesFor(polls) : polls;
   return out;
+}
+
+// /screen and /control each refresh every second or so; one read of every question's votes serves them all for 3 s.
+let voteCache: { at: number; key: string; polls: (Poll & { votes: number[] })[] } | null = null;
+async function votesFor(polls: Poll[]) {
+  const key = polls.map((p) => `${p.id}:${p.options.length}`).join(',');
+  if (voteCache && voteCache.key === key && Date.now() - voteCache.at < 3000) return voteCache.polls;
+  const withVotes = await Promise.all(polls.map(async (p) => ({ ...p, votes: await loadVotes(p) })));
+  voteCache = { at: Date.now(), key, polls: withVotes };
+  return withVotes;
 }
 
 export const json = (body: unknown, init: ResponseInit = {}) =>
