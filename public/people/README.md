@@ -23,5 +23,4 @@ A person with `"photo": false` in content/event.json (Manasa Krishna) is shown w
 | `bala-nagendra-prasad.jpg` | Dr. Bala Nagendra Prasad |
 | `ravikiran-pothineni.jpg` | Ravikiran Pothineni |
 | `surya-nigam.jpg` | Surya Nigam |
-| `siddharth-dalwadi.jpg` | Siddharth Dalwadi |
 | `ketansrisai-kondabathula.jpg` | Ketansrisai Kondabathula |

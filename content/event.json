@@ -27,7 +27,6 @@
     "bala-nagendra-prasad": { "name": "Dr. Bala Nagendra Prasad", "title": "Product Head", "org": "Campx", "bio": "" },
     "ravikiran-pothineni": { "name": "Ravikiran Pothineni", "title": "Founder and CEO", "org": "Winnify", "bio": "" },
     "surya-nigam": { "name": "Surya Nigam", "title": "AI Sales Specialist", "org": "", "bio": "" },
-    "siddharth-dalwadi": { "name": "Siddharth Dalwadi", "title": "Regional Head, South (EdTech and Education)", "org": "Google", "bio": "" },
     "ketansrisai-kondabathula": { "name": "Ketansrisai Kondabathula", "title": "Co-founder and Chief Business Officer", "org": "Campx", "bio": "" }
   },
 
@@ -95,7 +94,7 @@
       "askAfter": true,
       "label": "Google Keynote", "title": "DCGC 4.0",
       "subtitle": "Digital Campus on Google Cloud",
-      "speakers": ["surya-nigam", "siddharth-dalwadi"],
+      "speakers": ["surya-nigam"],
       "topics": ["Get Agentic AI ready", "World-class curriculum on Google Skills", "Globally recognised credentials", "Careers in AI and cloud"]
     },
     {
