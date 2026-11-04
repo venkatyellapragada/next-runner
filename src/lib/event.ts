@@ -23,6 +23,8 @@ export type Slot = {
   askAfter?: boolean;
   /** The same slide right after the anthem, before the slot's intro. */
   askAfterAnthem?: boolean;
+  /** A break that plays the pulse poll on screen, one question at a time, with voting open. */
+  pollLoop?: boolean;
   /** The speaker's deck (a link), opened with D on the screen laptop and shared on /join when published. */
   deck?: { title: string; url: string };
 };
@@ -181,4 +183,10 @@ export function talkSlots(): Slot[] {
 export function allDecks(): DeckLink[] {
   const fromSlots = agenda.filter((s) => s.deck).map((s) => ({ slot: s.id, title: `${s.label}: ${s.deck!.title}`, url: s.deck!.url }));
   return [...fromSlots, ...data.decks.links];
+}
+
+/** True when this slide is a break that plays the pulse poll (lunch). */
+export function isPollLoop(slideId: string | null | undefined): boolean {
+  const slide = slideById(slideId);
+  return slide?.kind === 'break' && !!slotById(slide.slotId)?.pollLoop;
 }

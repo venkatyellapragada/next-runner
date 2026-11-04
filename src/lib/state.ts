@@ -1,6 +1,6 @@
 // The live state: one small JSON document. Every change goes through `reduce`, and `v`
 // increments on every change so /screen can tell a new command from an old one.
-import { clockSlot, FIRST_SLIDE, slideById, slideIndex, slides, slotById, type Poll, type Slot } from './event';
+import { clockSlot, FIRST_SLIDE, isPollLoop, slideById, slideIndex, slides, slotById, type Poll, type Slot } from './event';
 
 export type Overlay = 'video' | 'anthem' | 'sim' | null;
 /** What the room is being asked to do on /join; set by control actions, cleared by moving on. */
@@ -73,13 +73,15 @@ function withFocus(prev: LiveState, next: LiveState, a: Action): LiveState {
   const kind = slideById(next.slideId)?.kind;
   let focus = prev.focus;
   if (a.type === 'poll') focus = a.open ? 'poll' : kind === 'poll' ? 'poll' : null;
-  else if (next.slideId !== prev.slideId || a.type === 'show' || a.type === 'go') focus = kind === 'poll' ? 'poll' : kind === 'questions' || kind === 'ask' ? 'ask' : null;
+  else if (next.slideId !== prev.slideId || a.type === 'show' || a.type === 'go') focus = kind === 'poll' || isPollLoop(next.slideId) ? 'poll' : kind === 'questions' || kind === 'ask' ? 'ask' : null;
   if (a.type === 'reset') focus = null;
   return focus === next.focus ? next : { ...next, focus };
 }
 
 export function reduce(s: LiveState, a: Action, now: number): LiveState {
-  const next = step(s, a, now);
+  let next = step(s, a, now);
+  // Arriving on the lunch poll opens voting, so the room can answer while the questions play.
+  if (next !== s && next.slideId !== s.slideId && isPollLoop(next.slideId) && !next.poll.open) next = { ...next, poll: { open: true } };
   return next === s ? s : withFocus(s, next, a);
 }
 

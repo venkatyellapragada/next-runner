@@ -3,6 +3,7 @@
 import {
   agenda,
   data,
+  isPollLoop,
   event,
   fmtClock,
   fmtCountdown,
@@ -126,7 +127,7 @@ function Foot({ state, now, joinUrl, slide }: ScreenProps) {
         <p className="eyebrow">Next{next ? ` · ${next.start}` : ''}</p>
         <div className="t">{next ? next.label : 'Thank you'}</div>
       </div>
-      {!OWN_QR.includes(slide.kind) && (
+      {!OWN_QR.includes(slide.kind) && !isPollLoop(slide.id) && (
         <div className="qr">
           <p className="eyebrow">Agenda &amp;<br />questions</p>
           <div className="qr-tile"><QR value={joinUrl} size={slide.kind === 'holding' ? 104 : 92} color="#0A0A0A" /></div>
@@ -152,7 +153,7 @@ function SlideBody(p: ScreenProps) {
     case 'panel':
       return <Panel {...p} slot={slot!} />;
     case 'break':
-      return <Break {...p} slot={slot!} />;
+      return slot?.pollLoop ? <PollLoop {...p} slot={slot} /> : <Break {...p} slot={slot!} />;
     case 'questions':
       return <Questions {...p} slot={slot} />;
     case 'poll':
@@ -561,16 +562,72 @@ function AskPrompt({ joinUrl }: ScreenProps) {
   );
 }
 
-// ── Poll results: every question in the set, with percentages ───────────
-function Poll({ state, polls, joinUrl }: ScreenProps) {
+// One question's options as bars with percentages; the leading answer in indigo.
+function PollBars({ q, size = 24 }: { q: PollResult; size?: number }) {
+  const counts = q.votes && q.votes.length === q.options.length ? q.votes : q.options.map(() => 0);
+  const total = counts.reduce((a, b) => a + b, 0);
+  const max = Math.max(...counts);
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: size * 0.2 }}>
+      {q.options.map((o, i) => {
+        const share = total ? counts[i] / total : 0;
+        const lead = total > 0 && counts[i] === max;
+        return (
+          <div key={o} style={{ display: 'grid', gridTemplateColumns: '1fr 32% 76px', alignItems: 'center', gap: 16 }}>
+            <p className="clamp1" style={{ margin: 0, fontSize: size, fontWeight: lead ? 700 : 400, color: lead ? 'var(--ink)' : 'var(--ink-2)' }}>{o}</p>
+            <div style={{ height: size / 2, background: 'var(--bg-2)', borderRadius: size / 4, overflow: 'hidden' }}>
+              <div className="bar-fill" style={{ height: '100%', width: `${share * 100}%`, background: lead ? 'var(--indigo)' : 'var(--rule-strong)' }} />
+            </div>
+            <p className="tabular" style={{ margin: 0, fontSize: size * 1.15, fontWeight: 700, textAlign: 'right', color: lead ? 'var(--indigo)' : 'var(--ink-2)' }}>{Math.round(share * 100)}%</p>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+const POLL_TURN_MS = 12000;
+
+// ── Lunch: the pulse poll plays one question at a time, live, with the QR to vote ──
+function PollLoop({ slot, state, now, polls, joinUrl, print }: ScreenProps & { slot: Slot }) {
   const set: PollResult[] = polls?.length ? polls : seedPolls;
-  const responses = Math.max(0, ...set.map((q) => (q.votes ?? []).reduce((a, b) => a + b, 0)));
+  const i = print ? 0 : Math.floor(now / POLL_TURN_MS) % set.length;
+  const q = set[i];
+  const next = slotNext(slot.id);
+  const target = timerActive(state, now) ? state.timer.endsAt! : next ? slotWindow(next, now).start : slotWindow(slot, now).end;
+  const ms = target - now;
+  const back = print || ms > 60 * 60000 ? `We resume at ${fmtClock(target)}` : ms <= 0 ? 'Resuming now' : `We resume in ${ms >= 10 * 60000 ? `${Math.ceil(ms / 60000)} min` : fmtCountdown(ms)}`;
+  return (
+    <div style={{ display: 'flex', gap: 112, alignItems: 'stretch', height: '100%' }}>
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+        <p className="eyebrow accent" style={{ marginBottom: 28 }}>{slot.label} · Pulse poll · Q{i + 1} of {set.length}</p>
+        <h1 key={q.id} className="heading resolve" style={{ fontSize: 64, lineHeight: 1.1 }}>{q.question}</h1>
+        <div style={{ marginTop: 'auto' }}>
+          <PollBars q={q} size={34} />
+        </div>
+      </div>
+      <div style={{ flex: 'none', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+        <QrPanel joinUrl={withFocus(joinUrl, 'poll')} line={state.poll.open ? 'Scan to vote' : 'Voting closed'} size={360} />
+        <p className="heading" style={{ fontSize: 36, fontVariantNumeric: 'tabular-nums' }}>{back}</p>
+      </div>
+    </div>
+  );
+}
+
+// ── Poll results: every question in the set, with percentages ───────────
+function Poll({ state, polls, joinUrl, now, print }: ScreenProps) {
+  const all: PollResult[] = polls?.length ? polls : seedPolls;
+  const responses = Math.max(0, ...all.map((q) => (q.votes ?? []).reduce((a, b) => a + b, 0)));
+  // Four questions fit; a longer set turns a page every 12 s (the PDF shows the first page).
+  const pages = Math.ceil(all.length / 4);
+  const page = print ? 0 : Math.floor(now / POLL_TURN_MS) % pages;
+  const set = all.slice(page * 4, page * 4 + 4);
   const cols = set.length > 2 ? 2 : 1;
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 48 }}>
         <div>
-          <p className="eyebrow accent" style={{ marginBottom: 14 }}>§ Pulse poll · {set.length} questions · {responses} {responses === 1 ? 'response' : 'responses'}</p>
+          <p className="eyebrow accent" style={{ marginBottom: 14 }}>§ Pulse poll · {all.length} questions{pages > 1 ? ` · page ${page + 1} of ${pages}` : ''} · {responses} {responses === 1 ? 'response' : 'responses'}</p>
           <h1 className="heading resolve" style={{ fontSize: 52, fontWeight: 800, letterSpacing: '-0.03em' }}>What the room thinks</h1>
         </div>
         {state.poll.open ? (
@@ -583,34 +640,17 @@ function Poll({ state, polls, joinUrl }: ScreenProps) {
         )}
       </div>
       <div style={{ flex: 1, display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gridAutoRows: '1fr', gap: 20, minHeight: 0 }}>
-        {set.map((q, qi) => {
-          const counts = q.votes && q.votes.length === q.options.length ? q.votes : q.options.map(() => 0);
-          const total = counts.reduce((a, b) => a + b, 0);
-          const max = Math.max(...counts);
-          return (
-            <div key={q.id} className="card" style={{ padding: '18px 26px', display: 'flex', flexDirection: 'column', gap: 10, minHeight: 0, overflow: 'hidden' }}>
-              <div style={{ display: 'flex', gap: 16, alignItems: 'baseline' }}>
-                <span className="eyebrow accent" style={{ fontSize: 20, flex: 'none' }}>Q{qi + 1}</span>
-                <p style={{ margin: 0, fontSize: 27, fontWeight: 700, lineHeight: 1.18, letterSpacing: '-0.01em' }}>{q.question}</p>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 'auto' }}>
-                {q.options.map((o, i) => {
-                  const share = total ? counts[i] / total : 0;
-                  const lead = total > 0 && counts[i] === max;
-                  return (
-                    <div key={o} style={{ display: 'grid', gridTemplateColumns: '1fr 32% 76px', alignItems: 'center', gap: 16 }}>
-                      <p className="clamp1" style={{ margin: 0, fontSize: 24, fontWeight: lead ? 700 : 400, color: lead ? 'var(--ink)' : 'var(--ink-2)' }}>{o}</p>
-                      <div style={{ height: 12, background: 'var(--bg-2)', borderRadius: 6, overflow: 'hidden' }}>
-                        <div className="bar-fill" style={{ height: '100%', width: `${share * 100}%`, background: lead ? 'var(--indigo)' : 'var(--rule-strong)' }} />
-                      </div>
-                      <p className="tabular" style={{ margin: 0, fontSize: 28, fontWeight: 700, textAlign: 'right', color: lead ? 'var(--indigo)' : 'var(--ink-2)' }}>{Math.round(share * 100)}%</p>
-                    </div>
-                  );
-                })}
-              </div>
+        {set.map((q, qi) => (
+          <div key={q.id} className="card" style={{ padding: '18px 26px', display: 'flex', flexDirection: 'column', gap: 10, minHeight: 0, overflow: 'hidden' }}>
+            <div style={{ display: 'flex', gap: 16, alignItems: 'baseline' }}>
+              <span className="eyebrow accent" style={{ fontSize: 20, flex: 'none' }}>Q{page * 4 + qi + 1}</span>
+              <p style={{ margin: 0, fontSize: 27, fontWeight: 700, lineHeight: 1.18, letterSpacing: '-0.01em' }}>{q.question}</p>
             </div>
-          );
-        })}
+            <div style={{ marginTop: 'auto' }}>
+              <PollBars q={q} />
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

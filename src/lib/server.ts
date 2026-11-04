@@ -1,7 +1,7 @@
 // Server-side helpers shared by the API routes.
 import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { seedPolls, type Poll } from './event';
+import { isPollLoop, seedPolls, type Poll } from './event';
 import { initialState, type LiveState, type StatePayload } from './state';
 import { hgetall, K, redis } from './store';
 
@@ -42,7 +42,7 @@ export async function payload(): Promise<StatePayload> {
   const state = await loadState();
   const out: StatePayload = { state, now: Date.now() };
   const polls = await allPolls();
-  const withVotes = state.poll.open || state.slideId === 'poll';
+  const withVotes = state.poll.open || state.slideId === 'poll' || isPollLoop(state.slideId);
   out.polls = withVotes ? await Promise.all(polls.map(async (p) => ({ ...p, votes: await loadVotes(p) }))) : polls;
   return out;
 }

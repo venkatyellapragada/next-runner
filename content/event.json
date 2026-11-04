@@ -86,6 +86,7 @@
     },
     {
       "id": "lunch", "start": "13:15", "end": "14:00", "kind": "break",
+      "pollLoop": true,
       "askAfter": true,
       "label": "Lunch", "title": "Lunch", "subtitle": "We resume at 14:15 with the Google keynote."
     },
@@ -147,6 +148,56 @@
       "id": "first-step",
       "question": "Which work should AI take off your faculty's plate first?",
       "options": ["Question paper setting", "Evaluation and marking", "Attendance and records", "Accreditation documentation"]
+    },
+    {
+      "id": "accreditation-evidence",
+      "question": "How much of your accreditation evidence is gathered automatically today?",
+      "options": ["Most of it", "About half", "Very little", "None yet"]
+    },
+    {
+      "id": "ai-barrier",
+      "question": "What holds your campus back most from adopting AI?",
+      "options": ["Budget", "Faculty readiness", "Data quality", "Policy and governance", "Leadership bandwidth"]
+    },
+    {
+      "id": "student-service",
+      "question": "Which student service would you hand to AI first?",
+      "options": ["Admissions queries", "Fees and finance", "Placements and careers", "Mentoring and wellbeing"]
+    },
+    {
+      "id": "student-ai-use",
+      "question": "How should students use AI in their coursework?",
+      "options": ["Freely, with disclosure", "For some tasks only", "Not yet", "Not at all"]
+    },
+    {
+      "id": "exam-future",
+      "question": "How will your examinations be held in five years?",
+      "options": ["Mostly on paper", "Mostly on screens", "A mix of both", "Mostly continuous assessment"]
+    },
+    {
+      "id": "nep-hardest",
+      "question": "Which NEP 2020 goal is hardest to deliver today?",
+      "options": ["Multidisciplinary learning", "Academic Bank of Credits", "Multiple entry and exit", "Outcome-based education"]
+    },
+    {
+      "id": "faculty-ai-use",
+      "question": "How many of your faculty use AI tools every week?",
+      "options": ["Most of them", "About half", "A few", "Hardly any"]
+    },
+    {
+      "id": "decision-speed",
+      "question": "How soon can leadership see this week's attendance and results?",
+      "options": ["The same day", "Within a week", "Within a month", "Only at semester end"]
+    },
+    {
+      "id": "ai-trust",
+      "question": "What would make you trust an AI recommendation on campus?",
+      "options": ["Seeing its sources", "Faculty sign-off", "A pilot that worked", "Peer institutions using it"]
+    },
+    {
+      "id": "next-budget",
+      "question": "Where will your next technology budget go first?",
+      "options": ["AI for teaching and learning", "Campus ERP and data", "Digital examinations", "Cyber security", "Student experience"]
     }
   ],
 
