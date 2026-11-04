@@ -14,6 +14,8 @@ export type Slot = {
   speakers?: string[];
   moderator?: string;
   topics?: string[];
+  /** The speaker's deck (a link), opened with D on the screen laptop and shared on /join when published. */
+  deck?: { title: string; url: string };
 };
 export type Poll = { id: string; question: string; options: string[]; custom?: boolean };
 export type DeckLink = { slot?: string; title: string; url: string };
@@ -155,4 +157,10 @@ export function slotNext(slotId: string | undefined): Slot | undefined {
 }
 export function talkSlots(): Slot[] {
   return agenda.filter((s) => s.kind === 'talk' || s.kind === 'panel' || s.kind === 'forum');
+}
+
+/** Every deck: the ones attached to sessions, then any extra links in decks.links. */
+export function allDecks(): DeckLink[] {
+  const fromSlots = agenda.filter((s) => s.deck).map((s) => ({ slot: s.id, title: `${s.label}: ${s.deck!.title}`, url: s.deck!.url }));
+  return [...fromSlots, ...data.decks.links];
 }

@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { Avatar } from '@/components/Avatar';
 import { Logo } from '@/components/Logo';
 import { NextMark } from '@/components/NextMark';
-import { agenda, data, event, person, slotProgress, slotWindow, talkSlots, type Poll, type Slot } from '@/lib/event';
+import { agenda, allDecks, data, event, person, slotProgress, slotWindow, talkSlots, type Poll, type Slot } from '@/lib/event';
 import { deviceId, useLive, useNow } from '@/lib/live';
 import { activeSlot } from '@/lib/state';
 import './join.css';
@@ -70,7 +70,7 @@ export default function JoinClient({ photos }: { photos: Record<string, string> 
             {cur && <NextUp slot={cur} />}
           </>
         )}
-        {tab === 'agenda' && <Agenda cur={cur} now={now} photos={photos} open={open} setOpen={setOpen} />}
+        {tab === 'agenda' && <Agenda cur={cur} now={now} photos={photos} open={open} setOpen={setOpen} decksPublished={!!state?.decksPublished} />}
         {tab === 'ask' && <Ask />}
         {tab === 'feedback' && <Feedback />}
       </main>
@@ -147,14 +147,17 @@ function Agenda({
   photos,
   open,
   setOpen,
+  decksPublished,
 }: {
   cur?: Slot;
   now: number;
   photos: Record<string, string>;
   open: string | null;
   setOpen: (id: string | null) => void;
+  decksPublished: boolean;
 }) {
-  const decks = data.decks.links;
+  // Deck links appear only once /control shares them (after the talks).
+  const decks = decksPublished ? allDecks() : [];
   return (
     <>
       <ol className="jn-agenda">

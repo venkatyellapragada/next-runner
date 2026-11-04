@@ -64,6 +64,7 @@
     {
       "id": "keynote-2", "start": "12:30", "end": "13:00", "kind": "talk",
       "label": "Campx Keynote 2", "title": "One Campus, One Truth",
+      "deck": { "title": "One Campus, One Truth", "url": "https://claude.ai/artifact/1dmjKSZRKJkGVAuzk8t3H4?sk=4C1ICv2omuxDGnYIz6hBlQ" },
       "speakers": ["bala-nagendra-prasad"],
       "topics": ["IQAC and accreditation", "NEP 2020", "A student's day", "A single source of truth", "AI with faculty in control"]
     },
@@ -85,6 +86,7 @@
     {
       "id": "keynote-3", "start": "14:50", "end": "15:20", "kind": "talk",
       "label": "Campx Keynote 3", "title": "Unified AI Driven Campus Operations",
+      "deck": { "title": "Unified AI Driven Campus Operations", "url": "https://claude.ai/artifact/DXsuBLZCWvovE8Gv9Jt7x5?sk=IOmrVbsD1mLwAv7oULnk3w" },
       "speakers": ["ketansrisai-kondabathula"], "topics": []
     },
     {

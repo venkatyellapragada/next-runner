@@ -79,3 +79,8 @@ input.num, input.grow { background: #fff; border-color: #d6d4cc; }
 .ctl-add textarea { min-height: 110px; padding: 8px 10px; border: 1px solid var(--rule); border-radius: 6px; background: #fff; }
 .ctl-running { font-size: 18px; margin: 4px 0 10px; }
 .ctl-running b { font-variant-numeric: tabular-nums; color: var(--indigo); }
+
+.ctl-deck { margin-left: 10px; font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; }
+.ctl-decklist { list-style: none; padding: 0; margin: 0 0 12px; }
+.ctl-decklist li { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--rule); }
+.ctl-decklist a { font-weight: 600; flex: none; }

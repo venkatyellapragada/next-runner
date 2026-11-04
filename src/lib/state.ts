@@ -18,6 +18,8 @@ export type LiveState = {
   /** A one-line announcement shown along the bottom of the screen. */
   notice: string;
   feedbackOpen: boolean;
+  /** Deck links are shown on /join only once this is on (after the talks). */
+  decksPublished: boolean;
   /** A full-screen interlude over the slides: the teaser film or the simulation. */
   overlay: Overlay;
   updatedAt: number;
@@ -32,6 +34,7 @@ export const initialState: LiveState = {
   timer: { endsAt: null, label: '' },
   notice: '',
   feedbackOpen: false,
+  decksPublished: false,
   overlay: null,
   updatedAt: 0,
 };
@@ -51,6 +54,7 @@ export type Action =
   | { type: 'timer'; minutes: number | null; label?: string }
   | { type: 'notice'; text: string }
   | { type: 'feedback'; open: boolean }
+  | { type: 'decks'; published: boolean }
   | { type: 'overlay'; overlay: Overlay }
   | { type: 'reset' };
 
@@ -109,6 +113,8 @@ export function reduce(s: LiveState, a: Action, now: number): LiveState {
       return { ...n, notice: a.text.slice(0, 120) };
     case 'feedback':
       return { ...n, feedbackOpen: a.open };
+    case 'decks':
+      return { ...n, decksPublished: a.published };
     case 'reset':
       return { ...initialState, v: s.v + 1, updatedAt: now };
   }

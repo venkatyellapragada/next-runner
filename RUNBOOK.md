@@ -17,6 +17,7 @@ Live site: **https://next-runner.vercel.app** (`<site>` below). PIN = the `CONTR
 | **V** | play the NEXT film full screen (loops, with sound) |
 | **S** | open the Campx AI-University simulation full screen |
 | **Q** or **Esc** | back to the slides (inside the simulation use **Q**; its own Esc flies the camera home) |
+| **D** | open the deck of the session on screen in a new tab (Keynote 2 and Keynote 3 have one); close the tab to return |
 | M | film sound on/off |
 | F | full screen |
 
@@ -25,6 +26,7 @@ Use the film before 09:30 and in breaks; the simulation in breaks and at lunch. 
 simulation: **T** opens the guided tours, **1–8** plays one, **A** plays all eight (about 6 min).
 
 ## Night before (4 Nov)
+0. On the screen laptop, open both deck links once (/control → *Decks*) and check they open without a login prompt; the decks live in a different claude.ai organisation, so sign that browser in to it if asked. As a backup, download each deck as a PDF from claude.ai (Share › Export) onto the laptop.
 1. Photos in `public/people/` and bios in `content/event.json`; redeploy. /control → *Content check* says nothing is missing.
 2. Rehearse once end to end: Next through every slide, a test question, a test vote.
 3. Export the PDF from the live site and copy it to the AV laptop and a USB stick:
@@ -51,6 +53,8 @@ simulation: **T** opens the guided tours, **1–8** plays one, **A** plays all e
   - Each phone can vote once per poll. *Clear votes* clears only the current poll.
 - **Open Forum (15:30):** questions arrive under *Questions*, newest first. Nothing reaches the screen until you tap **Put on screen**. The first one is shown large, up to three more as the queue. **Answered** removes it. **Hide** removes an unsuitable one from your list. Questions can also be shown during any session: *Questions* button at the top.
 - **Feedback:** *Open feedback now* at the start of Keynote 4 (16:20). It moves the form to the top of everyone's audience page.
+- **Decks (Keynote 2, Bala; Keynote 3, Ketan):** they are claude.ai decks, so they open in a browser tab. On the screen laptop, with that session's intro or speaker slide up, press **D**: the deck opens in a new tab; present it from there and close the tab to come back to the runner. /control → *Decks* (and *Open deck* beside each session) has the same links for a presenter's laptop.
+- **Sharing decks:** after the talks, /control → *Decks* → **Share decks with the audience** puts the links on /join (Agenda and Presentations). Off until then.
 - **Wrong slide:** tap any slide in *Running order*.
 
 ## When something fails

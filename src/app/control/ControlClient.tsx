@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Fit } from '@/components/Fit';
 import { joinUrlFor } from '@/components/bits';
 import { Screen } from '@/components/screen/Slides';
-import { agenda, people, slideById, slideIndex, slides, type Poll } from '@/lib/event';
+import { agenda, allDecks, people, slideById, slideIndex, slides, type Poll } from '@/lib/event';
 import { control, getPin, setPin, useLive, useNow } from '@/lib/live';
 import type { Action } from '@/lib/state';
 import './control.css';
@@ -153,7 +153,12 @@ function Console({ pin, health, photos, onLock }: { pin: string; health: Health;
               <li key={slot.id} className={active ? 'active' : ''}>
                 <div className="when">{slot.start}</div>
                 <div className="what">
-                  <div className="label">{slot.label}</div>
+                  <div className="label">
+                    {slot.label}
+                    {slot.deck && (
+                      <a className="ctl-deck" href={slot.deck.url} target="_blank" rel="noreferrer">Open deck</a>
+                    )}
+                  </div>
                   <div className="chips">
                     {own.map((s) => (
                       <button key={s.id} className={`chip ${s.id === state.slideId ? 'on' : ''}`} onClick={() => send({ type: 'go', slideId: s.id })}>
@@ -177,6 +182,23 @@ function Console({ pin, health, photos, onLock }: { pin: string; health: Health;
         <p className="ctl-muted">Opening it puts the form at the top of the audience page. It is always reachable from there.</p>
         <button className={`btn ${state.feedbackOpen ? 'on' : ''}`} onClick={() => send({ type: 'feedback', open: !state.feedbackOpen })}>
           {state.feedbackOpen ? 'Feedback is open: close' : 'Open feedback now'}
+        </button>
+      </Section>
+
+      <Section title="Decks">
+        <p className="ctl-muted">
+          On the screen laptop, <b>D</b> opens the deck of the session on screen in a new tab; close the tab to return. The links also sit beside each session in the running order.
+        </p>
+        <ul className="ctl-decklist">
+          {allDecks().map((d) => (
+            <li key={d.url}>
+              <span>{d.title}</span>
+              <a href={d.url} target="_blank" rel="noreferrer">Open</a>
+            </li>
+          ))}
+        </ul>
+        <button className={`btn ${state.decksPublished ? 'on' : ''}`} onClick={() => send({ type: 'decks', published: !state.decksPublished })}>
+          {state.decksPublished ? 'Decks are on the audience page: hide' : 'Share decks with the audience'}
         </button>
       </Section>
 

@@ -47,6 +47,7 @@ from /control and return to where you were.
 - The simulation: a static export of `venkatyellapragada/campx-ai-university`, built under `/sim` and committed in
   `public/sim`. To refresh it after the simulation changes: check it out next to this repo, then
   `node scripts/update-sim.mjs` and commit `public/sim`.
+- Speaker decks: `deck: { title, url }` on a session in `content/event.json`. **D** on /screen opens the current session's deck in a new tab; /control links them and can share them on /join.
 - Keys and buttons: RUNBOOK.md.
 
 ## Editing content

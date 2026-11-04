@@ -5,13 +5,13 @@ import { Screen } from '@/components/screen/Slides';
 import { joinUrlFor } from '@/components/bits';
 import { data, hhmmToMs, slideById } from '@/lib/event';
 import { control, getPin, setPin, useLive, useNow } from '@/lib/live';
-import { initialState, reduce, type Action, type Overlay } from '@/lib/state';
+import { activeSlot, initialState, reduce, type Action, type Overlay } from '@/lib/state';
 
 // The projector page. Follows /control through /api/state. If the network dies it keeps the
 // last state, the clock keeps running, and the keyboard (or a USB clicker) still drives it:
 //   → / PageDown / Space   next            ← / PageUp   previous
 //   V   play the NEXT film        S   show the simulation        Q / Esc   back to the slides
-//   M   sound on/off (film)       F   full screen
+//   M   sound on/off (film)       F   full screen         D   open this session's deck in a new tab
 // Open once as /screen?pin=XXXX and the keyboard also moves /control's state.
 // Testing: ?at=10:25 freezes the clock, ?slide=keynote-1:speaker forces a slide.
 export default function ScreenClient({ photos }: { photos: Record<string, string> }) {
@@ -49,6 +49,12 @@ export default function ScreenClient({ photos }: { photos: Record<string, string
       else if (k === 's') action = { type: 'overlay', overlay: state.overlay === 'sim' ? null : 'sim' };
       else if (k === 'escape' || k === 'q') action = state.overlay ? { type: 'overlay', overlay: null } : null;
       else if (k === 'f') document.documentElement.requestFullscreen?.().catch(() => {});
+      else if (k === 'd') {
+        // The deck of the session on screen (or the one we left for poll/questions), in a new tab.
+        const deck = activeSlot(state, Date.now() + offset)?.deck;
+        if (deck) window.open(deck.url, 'next-deck');
+        return;
+      }
       if (!action) return;
       e.preventDefault();
       const moved = reduce(state, action, Date.now());
@@ -64,7 +70,7 @@ export default function ScreenClient({ photos }: { photos: Record<string, string
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [state, server.v, params.pin, setData]);
+  }, [state, server.v, params.pin, setData, offset]);
 
   // Hide the cursor when it is not moving.
   useEffect(() => {
