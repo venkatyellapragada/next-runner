@@ -1,13 +1,13 @@
 'use client';
 // The audience page behind the QR. No login, one small bundle, and it polls through the CDN
 // every 15 s, so a hall of phones on weak wifi is fine.
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Avatar } from '@/components/Avatar';
 import { Logo } from '@/components/Logo';
 import { NextMark } from '@/components/NextMark';
-import { agenda, allDecks, data, event, person, slotProgress, slotWindow, talkSlots, type Poll, type Slot } from '@/lib/event';
+import { agenda, allDecks, data, event, person, slotProgress, slotWindow, talkSlots, type Slot } from '@/lib/event';
 import { deviceId, useLive, useNow } from '@/lib/live';
-import { activeSlot } from '@/lib/state';
+import { activeSlot, type Focus, type PollResult } from '@/lib/state';
 import './join.css';
 
 type Tab = 'now' | 'agenda' | 'ask' | 'feedback';
@@ -23,19 +23,54 @@ export default function JoinClient({ photos }: { photos: Record<string, string> 
   const now = useNow(offset);
   const [tab, setTab] = useState<Tab>('now');
   const [open, setOpen] = useState<string | null>(null);
+  // What the QR asked for (?focus=poll|ask). Holds until the room moves on (server focus changes).
+  const [askedFor, setAskedFor] = useState<Focus>(null);
+  const [answeredAll, setAnsweredAll] = useState(false);
+  // A tab named in the URL hash (#agenda, #feedback) is the person's choice; the room's focus does not override it.
+  const chosenTab = useRef(false);
 
+  // Deep links work on first load: ?focus=poll|ask and #now|#agenda|#ask|#feedback.
   useEffect(() => {
+    const q = new URLSearchParams(location.search).get('focus');
+    const f: Focus = q === 'poll' || q === 'ask' ? q : null;
+    setAskedFor(f);
     const h = location.hash.slice(1) as Tab;
-    if (TABS.some(([t]) => t === h)) setTab(h);
+    if (f === 'ask') setTab('ask');
+    else if (f === 'poll') setTab('now');
+    else if (TABS.some(([t]) => t === h)) {
+      setTab(h);
+      chosenTab.current = true;
+    }
   }, []);
+
+  const state = live?.state;
+  const serverFocus = state?.focus ?? null;
+  // When control changes what the room is doing, follow it once (do not fight a person who moves tabs later).
+  const lastFocus = useRef<Focus | undefined>(undefined);
+  useEffect(() => {
+    if (!state) return;
+    const prev = lastFocus.current;
+    lastFocus.current = serverFocus;
+    if (prev === serverFocus) return;
+    // First load: what the room is doing now beats an older QR link, unless a tab was chosen in the URL.
+    if (prev === undefined) {
+      if (!serverFocus || chosenTab.current) return;
+      if (serverFocus !== askedFor) setAskedFor(null);
+    } else setAskedFor(null);
+    if (serverFocus === 'ask') setTab('ask');
+    if (serverFocus === 'poll') setTab('now');
+  }, [state, serverFocus]);
+
   const go = (t: Tab) => {
     setTab(t);
-    history.replaceState(null, '', `#${t}`);
+    history.replaceState(null, '', `${location.pathname}#${t}`);
     window.scrollTo(0, 0);
   };
 
-  const state = live?.state;
+  const focus: Focus = serverFocus ?? askedFor;
   const cur = state ? activeSlot(state, now) : undefined;
+  const polls = live?.polls ?? [];
+  const pollOpen = !!state?.poll.open;
 
   return (
     <div className="jn">
@@ -55,22 +90,29 @@ export default function JoinClient({ photos }: { photos: Record<string, string> 
       </nav>
 
       <main className="jn-main">
-        {tab === 'now' && (
-          <>
-            {state?.feedbackOpen && (
-              <button className="jn-card jn-cta" onClick={() => go('feedback')}>
-                <span className="jn-eyebrow">Before you leave</span>
-                <strong>Tell us how the day went</strong>
-                <span>It takes two minutes</span>
-              </button>
-            )}
-            {cur ? <NowCard slot={cur} now={now} photos={photos} /> : <p className="jn-muted">Loading the programme…</p>}
-            {state?.poll.open && live?.pollDef && <PollCard key={live.pollDef.id} poll={live.pollDef} votes={live.votes} />}
-            <button className="jn-btn primary wide" onClick={() => go('ask')}>Ask a question</button>
-            {cur && <NextUp slot={cur} />}
-          </>
-        )}
-        {tab === 'agenda' && <Agenda cur={cur} now={now} photos={photos} open={open} setOpen={setOpen} decksPublished={!!state?.decksPublished} />}
+        {tab === 'now' &&
+          (focus === 'poll' ? (
+            // The screen is asking for votes: the poll comes first, the question button only after voting.
+            <>
+              <PollFlow polls={polls} open={pollOpen} onDone={setAnsweredAll} />
+              {answeredAll && (
+                <div className="jn-after">
+                  <p className="jn-strong">Voted. You can also ask a question.</p>
+                  <button className="jn-btn primary wide" onClick={() => go('ask')}>Ask a question</button>
+                </div>
+              )}
+              {cur && <NowCard slot={cur} now={now} photos={photos} />}
+            </>
+          ) : (
+            <>
+              {state?.feedbackOpen && <Feedback />}
+              {cur ? <NowCard slot={cur} now={now} photos={photos} /> : <p className="jn-muted">Loading the programme…</p>}
+              {pollOpen && <PollFlow polls={polls} open onDone={setAnsweredAll} />}
+              <button className="jn-btn primary wide" onClick={() => go('ask')}>Ask a question</button>
+              {cur && <NextUp slot={cur} />}
+            </>
+          ))}
+        {tab === 'agenda' && <Agenda cur={cur} photos={photos} open={open} setOpen={setOpen} decksPublished={!!state?.decksPublished} />}
         {tab === 'ask' && <Ask />}
         {tab === 'feedback' && <Feedback />}
       </main>
@@ -143,14 +185,12 @@ function People({ slot, photos, bios = false }: { slot: Slot; photos: Record<str
 
 function Agenda({
   cur,
-  now,
   photos,
   open,
   setOpen,
   decksPublished,
 }: {
   cur?: Slot;
-  now: number;
   photos: Record<string, string>;
   open: string | null;
   setOpen: (id: string | null) => void;
@@ -158,20 +198,31 @@ function Agenda({
 }) {
   // Deck links appear only once /control shares them (after the talks).
   const decks = decksPublished ? allDecks() : [];
+  // Done / now / next follow the slide control has up, so they agree with the screen when the day runs late.
+  const curIdx = agenda.findIndex((x) => x.id === cur?.id);
   return (
     <>
       <ol className="jn-agenda">
         {agenda.map((s) => {
-          const past = slotWindow(s, now).end < now && s.id !== cur?.id;
+          const i = agenda.indexOf(s);
+          const past = curIdx >= 0 && i < curIdx;
+          const isNext = curIdx >= 0 && i === curIdx + 1;
           const expandable = s.kind !== 'break' && s.kind !== 'holding';
           const isOpen = open === s.id;
           const deck = decks.filter((d) => d.slot === s.id);
           return (
             <li key={s.id} className={`${s.id === cur?.id ? 'now' : ''} ${past ? 'past' : ''}`}>
-              <button className="row" disabled={!expandable} onClick={() => setOpen(isOpen ? null : s.id)} aria-expanded={expandable ? isOpen : undefined}>
+              <button
+                className="row"
+                disabled={!expandable}
+                onClick={() => setOpen(isOpen ? null : s.id)}
+                aria-expanded={expandable ? isOpen : undefined}
+                aria-label={expandable ? `${s.label}: ${isOpen ? 'Hide details' : 'Show details'}` : undefined}
+              >
                 <span className="time">{s.start}</span>
                 <span className="what">
                   {s.id === cur?.id && <span className="jn-tag now">Now</span>}
+                  {isNext && <span className="jn-tag now muted">Next</span>}
                   <span className="jn-strong">{s.label}</span>
                   {s.title !== s.label && <span className="jn-title-sm">{s.title}</span>}
                   {expandable && <span className="jn-muted">{who(s)}</span>}
@@ -228,25 +279,46 @@ async function post(url: string, body: unknown): Promise<{ ok: boolean; error?: 
   }
 }
 
-function PollCard({ poll, votes: liveVotes }: { poll: Poll; votes?: number[] }) {
-  const [voted, setVoted] = useState<number | null>(null);
-  const [votes, setVotes] = useState<number[] | undefined>();
+/** The pulse poll: each question in turn, one answer per question on this phone, then the results. */
+function PollFlow({ polls, open, onDone }: { polls: PollResult[]; open: boolean; onDone: (done: boolean) => void }) {
+  const [answers, setAnswers] = useState<Record<string, number>>({});
+  const [votes, setVotes] = useState<Record<string, number[]>>({});
   const [err, setErr] = useState('');
   const [sending, setSending] = useState(false);
-  // One vote per poll on this phone; a new poll starts fresh.
+  const ids = polls.map((p) => p.id).join(',');
   useEffect(() => {
-    const v = remember('vote-' + poll.id);
-    setVoted(v ? Number(v) : null);
-  }, [poll.id]);
-  const shown = votes ?? liveVotes;
-  const total = shown?.reduce((a, b) => a + b, 0) ?? 0;
-  return (
-    <section className="jn-card">
-      <p className="jn-eyebrow">Pulse poll</p>
-      <h2 className="jn-title-sm" style={{ marginBottom: 12 }}>{poll.question}</h2>
-      {voted === null ? (
+    const a: Record<string, number> = {};
+    for (const p of polls) {
+      const v = remember('vote-' + p.id);
+      if (v) a[p.id] = Number(v);
+    }
+    setAnswers(a);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ids]);
+  const nextQ = polls.find((p) => answers[p.id] === undefined);
+  const done = polls.length > 0 && !nextQ;
+  useEffect(() => onDone(done), [done, onDone]);
+
+  if (!polls.length) return null;
+  if (!open && !done)
+    return (
+      <section className="jn-card">
+        <p className="jn-eyebrow">Pulse poll</p>
+        <h2 className="jn-title-sm">Voting opens shortly.</h2>
+        <p className="jn-muted">Keep this page open; the questions appear here when the screen asks for them.</p>
+      </section>
+    );
+  if (nextQ && open) {
+    const k = polls.indexOf(nextQ);
+    return (
+      <section className="jn-card">
+        <p className="jn-eyebrow">Pulse poll · Question {k + 1} of {polls.length}</p>
+        <div className="jn-steps" aria-hidden>
+          {polls.map((p, i) => <span key={p.id} className={i < k ? 'done' : i === k ? 'cur' : ''} />)}
+        </div>
+        <h2 className="jn-title-sm" style={{ marginBottom: 12 }}>{nextQ.question}</h2>
         <div className="jn-options">
-          {poll.options.map((o, i) => (
+          {nextQ.options.map((o, i) => (
             <button
               key={o}
               className="jn-btn"
@@ -254,13 +326,13 @@ function PollCard({ poll, votes: liveVotes }: { poll: Poll; votes?: number[] }) 
               onClick={async () => {
                 setSending(true);
                 setErr('');
-                const r = await post('/api/vote', { device: deviceId(), pollId: poll.id, option: i });
+                const r = await post('/api/vote', { device: deviceId(), pollId: nextQ.id, option: i });
                 setSending(false);
                 if (r.ok) {
-                  setVoted(i);
-                  remember('vote-' + poll.id, String(i));
-                  setVotes(r.votes);
-                } else setErr(r.error ?? 'Could not record your vote.');
+                  remember('vote-' + nextQ.id, String(i));
+                  setAnswers((a) => ({ ...a, [nextQ.id]: i }));
+                  if (r.votes) setVotes((v) => ({ ...v, [nextQ.id]: r.votes! }));
+                } else setErr(r.error ?? 'Could not record your answer.');
               }}
             >
               {o}
@@ -268,22 +340,34 @@ function PollCard({ poll, votes: liveVotes }: { poll: Poll; votes?: number[] }) 
           ))}
           {err && <p className="jn-error">{err}</p>}
         </div>
-      ) : (
-        <>
-          <ul className="jn-results">
-            {poll.options.map((o, i) => {
-              const share = total && shown ? shown[i] / total : 0;
-              return (
-                <li key={o} className={i === voted ? 'mine' : ''}>
-                  <div className="lab"><span>{o}</span><b>{Math.round(share * 100)}%</b></div>
-                  <div className="jn-bar"><div style={{ width: `${share * 100}%` }} /></div>
-                </li>
-              );
-            })}
-          </ul>
-          <p className="jn-muted">Thank you. Results are on the big screen.</p>
-        </>
-      )}
+      </section>
+    );
+  }
+  // Every question answered (or voting closed after answering some): show what the room said so far.
+  return (
+    <section className="jn-card">
+      <p className="jn-eyebrow">Pulse poll · {done ? 'Thank you' : 'Voting closed'}</p>
+      {polls.map((p, qi) => {
+        const counts = votes[p.id] ?? p.votes;
+        const total = counts?.reduce((a, b) => a + b, 0) ?? 0;
+        return (
+          <div key={p.id} className="jn-result">
+            <p className="jn-strong">Q{qi + 1}. {p.question}</p>
+            <ul className="jn-results">
+              {p.options.map((o, i) => {
+                const share = total && counts ? counts[i] / total : 0;
+                return (
+                  <li key={o} className={i === answers[p.id] ? 'mine' : ''}>
+                    <div className="lab"><span>{o}</span><b>{counts ? `${Math.round(share * 100)}%` : ''}</b></div>
+                    {counts && <div className="jn-bar"><div style={{ width: `${share * 100}%` }} /></div>}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        );
+      })}
+      <p className="jn-muted">Results are on the big screen.</p>
     </section>
   );
 }
@@ -330,7 +414,7 @@ function Ask() {
       <p className="jn-eyebrow">Ask a question</p>
       <label htmlFor="q">Your question</label>
       <textarea id="q" rows={4} maxLength={280} required value={text} onChange={(e) => setText(e.target.value)} />
-      <p className="jn-count">{280 - text.length}</p>
+      <p className="jn-count" aria-live="polite">{280 - text.length} characters left</p>
       <label htmlFor="role">Your role (optional)</label>
       <select id="role" value={role} onChange={(e) => setRole(e.target.value)}>
         <option value="">Prefer not to say</option>

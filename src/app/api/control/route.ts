@@ -21,8 +21,8 @@ export async function POST(req: Request) {
   const action = (await req.json()) as Action | { type: 'wipe-audience' } | { type: 'wipe-votes' };
   try {
     if (action.type === 'wipe-votes') {
-      const id = (await loadState()).poll.id;
-      await redis('DEL', K.votes(id), K.voters(id));
+      const ids = (await allPolls()).map((p) => p.id);
+      await redis('DEL', ...ids.flatMap((id) => [K.votes(id), K.voters(id)]));
     } else if (action.type === 'wipe-audience') {
       const ids = (await allPolls()).map((p) => p.id);
       await redis('DEL', K.questions, K.qstatus, K.feedback, ...ids.flatMap((id) => [K.votes(id), K.voters(id)]));

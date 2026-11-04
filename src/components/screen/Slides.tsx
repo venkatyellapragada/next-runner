@@ -13,10 +13,9 @@ import {
   slotWindow,
   type Slide,
   type SlideKind,
-  type Poll as PollDef,
   type Slot,
 } from '@/lib/event';
-import { activeSlot, timerActive, type LiveState } from '@/lib/state';
+import { activeSlot, timerActive, type LiveState, type PollResult } from '@/lib/state';
 import { Avatar } from '../Avatar';
 import { Logo } from '../Logo';
 import { NextMark } from '../NextMark';
@@ -29,9 +28,8 @@ export type ScreenProps = {
   slide: Slide;
   state: LiveState;
   now: number;
-  votes?: number[];
-  /** The current poll; the first in content/event.json when not given. */
-  pollDef?: PollDef;
+  /** Every poll question, with votes while voting is open or results are up; content/event.json when not given. */
+  polls?: PollResult[];
   photos: Record<string, string>;
   joinUrl: string;
   offline?: boolean;
@@ -43,6 +41,10 @@ export type ScreenProps = {
 
 const GROUND: Partial<Record<SlideKind, string>> = { holding: 'brand on-brand', break: 'tint' };
 const range = (s: Slot) => `${s.start}–${s.end}`;
+/** QR codes say what they are for: the poll slide opens the poll, question slides open the form. */
+const withFocus = (joinUrl: string, focus: 'poll' | 'ask') => `${joinUrl}${joinUrl.includes('?') ? '&' : '?'}focus=${focus}`;
+// Slides with their own QR card: the footer drops its QR so there is only ever one, captioned for the slide.
+const OWN_QR: SlideKind[] = ['poll', 'questions'];
 
 export function Screen(p: ScreenProps) {
   const { w, h } = p.size ?? { w: 1920, h: 1080 };
@@ -50,7 +52,7 @@ export function Screen(p: ScreenProps) {
   return (
     <div className={`stage ${GROUND[p.slide.kind] ?? 'paper'}`} style={{ width: w, height: h }}>
       <Top {...p} />
-      <div key={p.slide.id} className="content slide-enter">
+      <div key={p.slide.id} className="content slide-enter" style={p.slide.kind === 'poll' ? { bottom: 64 } : undefined}>
         <SlideBody {...p} />
       </div>
       {notice ? (
@@ -58,7 +60,7 @@ export function Screen(p: ScreenProps) {
           <span className="eyebrow">Notice</span>
           <span className="clamp1">{notice}</span>
         </div>
-      ) : (
+      ) : p.slide.kind === 'poll' ? null : (
         <Foot {...p} />
       )}
       {p.state.overlay && <InterludeCard kind={p.state.overlay} />}
@@ -123,10 +125,12 @@ function Foot({ state, now, joinUrl, slide }: ScreenProps) {
         <p className="eyebrow">Next{next ? ` · ${next.start}` : ''}</p>
         <div className="t">{next ? next.label : 'Thank you'}</div>
       </div>
-      <div className="qr">
-        <p className="eyebrow">Scan<br />to ask</p>
-        <div className="qr-tile"><QR value={joinUrl} size={slide.kind === 'holding' ? 104 : 92} color="#0A0A0A" /></div>
-      </div>
+      {!OWN_QR.includes(slide.kind) && (
+        <div className="qr">
+          <p className="eyebrow">Agenda &amp;<br />questions</p>
+          <div className="qr-tile"><QR value={joinUrl} size={slide.kind === 'holding' ? 104 : 92} color="#0A0A0A" /></div>
+        </div>
+      )}
     </div>
   );
 }
@@ -411,43 +415,62 @@ function Questions({ state, joinUrl, slot }: ScreenProps & { slot?: Slot }) {
         )}
       </div>
       <div style={{ width: 420, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-        <QrPanel joinUrl={joinUrl} line="Scan to ask a question" />
+        <QrPanel joinUrl={withFocus(joinUrl, 'ask')} line="Scan to ask a question" />
       </div>
     </div>
   );
 }
 
-// ── Poll results ─────────────────────────────────────────────────────────
-function Poll({ state, votes, joinUrl, pollDef }: ScreenProps) {
-  const poll = pollDef ?? seedPolls[0];
-  const counts = votes && votes.length === poll.options.length ? votes : poll.options.map(() => 0);
-  const total = counts.reduce((a, b) => a + b, 0);
-  const max = Math.max(...counts);
+// ── Poll results: every question in the set, with percentages ───────────
+function Poll({ state, polls, joinUrl }: ScreenProps) {
+  const set: PollResult[] = polls?.length ? polls : seedPolls;
+  const responses = Math.max(0, ...set.map((q) => (q.votes ?? []).reduce((a, b) => a + b, 0)));
+  const cols = set.length > 2 ? 2 : 1;
   return (
-    <div className="cols">
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <p className="eyebrow accent" style={{ marginBottom: 32 }}>§ Pulse poll · {total} {total === 1 ? 'response' : 'responses'}</p>
-        <h1 className="heading resolve" style={{ fontSize: 56, marginBottom: 48 }}>{poll.question}</h1>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 26 }}>
-          {poll.options.map((o, i) => {
-            const share = total ? counts[i] / total : 0;
-            const lead = total > 0 && counts[i] === max;
-            return (
-              <div key={o}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
-                  <p className={`body ${lead ? '' : 'muted'}`} style={{ fontSize: 32, fontWeight: lead ? 700 : 400 }}>{o}</p>
-                  <p className="tabular" style={{ margin: 0, fontSize: 40, fontWeight: 700, color: lead ? 'var(--indigo)' : 'var(--ink-2)' }}>{Math.round(share * 100)}%</p>
-                </div>
-                <div style={{ height: 14, background: 'var(--bg-2)', borderRadius: 7, overflow: 'hidden' }}>
-                  <div className="bar-fill" style={{ height: '100%', width: `${share * 100}%`, background: lead ? 'var(--indigo)' : 'var(--rule-strong)', borderRadius: 7 }} />
-                </div>
-              </div>
-            );
-          })}
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 48 }}>
+        <div>
+          <p className="eyebrow accent" style={{ marginBottom: 14 }}>§ Pulse poll · {set.length} questions · {responses} {responses === 1 ? 'response' : 'responses'}</p>
+          <h1 className="heading resolve" style={{ fontSize: 52, fontWeight: 800, letterSpacing: '-0.03em' }}>What the room thinks</h1>
         </div>
+        {state.poll.open ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 20, background: 'var(--bg-2)', borderRadius: 14, padding: '10px 14px', flex: 'none' }}>
+            <p style={{ margin: 0, fontSize: 28, fontWeight: 700, textAlign: 'right', lineHeight: 1.2 }}>Vote on<br />your phone</p>
+            <div className="qr-tile"><QR value={withFocus(joinUrl, 'poll')} size={112} color="#0A0A0A" /></div>
+          </div>
+        ) : (
+          <p className="eyebrow" style={{ fontSize: 24, flex: 'none', marginTop: 8 }}>Voting closed</p>
+        )}
       </div>
-      <div style={{ width: 400, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-        {state.poll.open ? <QrPanel joinUrl={joinUrl} line="Vote on your phone" size={260} /> : <p className="heading faint" style={{ fontSize: 44 }}>Voting closed</p>}
+      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gridAutoRows: '1fr', gap: 20, minHeight: 0 }}>
+        {set.map((q, qi) => {
+          const counts = q.votes && q.votes.length === q.options.length ? q.votes : q.options.map(() => 0);
+          const total = counts.reduce((a, b) => a + b, 0);
+          const max = Math.max(...counts);
+          return (
+            <div key={q.id} className="card" style={{ padding: '18px 26px', display: 'flex', flexDirection: 'column', gap: 10, minHeight: 0, overflow: 'hidden' }}>
+              <div style={{ display: 'flex', gap: 16, alignItems: 'baseline' }}>
+                <span className="eyebrow accent" style={{ fontSize: 20, flex: 'none' }}>Q{qi + 1}</span>
+                <p style={{ margin: 0, fontSize: 27, fontWeight: 700, lineHeight: 1.18, letterSpacing: '-0.01em' }}>{q.question}</p>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 'auto' }}>
+                {q.options.map((o, i) => {
+                  const share = total ? counts[i] / total : 0;
+                  const lead = total > 0 && counts[i] === max;
+                  return (
+                    <div key={o} style={{ display: 'grid', gridTemplateColumns: '1fr 32% 76px', alignItems: 'center', gap: 16 }}>
+                      <p className="clamp1" style={{ margin: 0, fontSize: 24, fontWeight: lead ? 700 : 400, color: lead ? 'var(--ink)' : 'var(--ink-2)' }}>{o}</p>
+                      <div style={{ height: 12, background: 'var(--bg-2)', borderRadius: 6, overflow: 'hidden' }}>
+                        <div className="bar-fill" style={{ height: '100%', width: `${share * 100}%`, background: lead ? 'var(--indigo)' : 'var(--rule-strong)' }} />
+                      </div>
+                      <p className="tabular" style={{ margin: 0, fontSize: 28, fontWeight: 700, textAlign: 'right', color: lead ? 'var(--indigo)' : 'var(--ink-2)' }}>{Math.round(share * 100)}%</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

@@ -30,10 +30,13 @@ Day-of instructions: **RUNBOOK.md**. Look and feel: **DESIGN.md**.
 
 ## Data model
 - `content/event.json` — event, people, agenda slots, polls, roles, interludes, deck links. Edit and redeploy.
-- Live state (Redis key `next1:state`): `{ v, slideId, returnTo, poll: {id, open}, questions: [shown],
-  timer: {endsAt, label}, notice, feedbackOpen, overlay }`. `v` increments on every change.
-- Polls: `polls` in `content/event.json`, plus polls added from /control (Redis `next1:polls`). Votes per poll in
-  `next1:votes:<id>`, one per device (`next1:voters:<id>`).
+- Live state (Redis key `next1:state`): `{ v, slideId, returnTo, poll: {open}, focus, questions: [shown],
+  timer: {endsAt, label}, notice, feedbackOpen, decksPublished, overlay }`. `v` increments on every change.
+  `focus` ("poll" | "ask" | null) is set by control actions and tells /join what to put first.
+- Pulse poll: the questions in `polls` in `content/event.json` (four), plus any added from /control (Redis
+  `next1:polls`), answered in order while voting is open. Votes per question in `next1:votes:<id>`, one per device
+  (`next1:voters:<id>`).
+- The control PIN travels only in the `x-pin` header (never a URL); CSV exports are fetched with it.
 - Audience data (Redis): questions list plus a status per question, poll votes hash plus a
   voter set, feedback list. Exported as CSV from /control.
 

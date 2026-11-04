@@ -9,17 +9,16 @@ export const CONTROL_PIN = process.env.CONTROL_PIN || '0000';
 export const defaultPin = !process.env.CONTROL_PIN;
 
 export function authorised(req: Request): boolean {
-  const url = new URL(req.url);
-  const pin = req.headers.get('x-pin') ?? url.searchParams.get('pin') ?? '';
-  return pin === CONTROL_PIN;
+  // Header only: a PIN in a URL ends up in history, logs and screenshots.
+  return (req.headers.get('x-pin') ?? '') === CONTROL_PIN;
 }
 
 export async function loadState(): Promise<LiveState> {
   const raw = await redis<string | null>('GET', K.state);
   if (!raw) return initialState;
   const saved = JSON.parse(raw) as LiveState;
-  // State saved before polls had ids keeps working.
-  return { ...initialState, ...saved, poll: { ...initialState.poll, ...(saved.poll ?? {}) } };
+  // State saved by earlier versions (a poll id, no focus) keeps working.
+  return { ...initialState, ...saved, poll: { open: !!saved.poll?.open }, focus: saved.focus ?? null };
 }
 export async function saveState(s: LiveState): Promise<void> {
   await redis('SET', K.state, JSON.stringify(s));
@@ -42,11 +41,9 @@ export async function loadVotes(p: Poll): Promise<number[]> {
 export async function payload(): Promise<StatePayload> {
   const state = await loadState();
   const out: StatePayload = { state, now: Date.now() };
-  const def = (await findPoll(state.poll.id)) ?? seedPolls[0];
-  if (def) {
-    out.pollDef = def;
-    if (state.poll.open || state.slideId === 'poll') out.votes = await loadVotes(def);
-  }
+  const polls = await allPolls();
+  const withVotes = state.poll.open || state.slideId === 'poll';
+  out.polls = withVotes ? await Promise.all(polls.map(async (p) => ({ ...p, votes: await loadVotes(p) }))) : polls;
   return out;
 }
 

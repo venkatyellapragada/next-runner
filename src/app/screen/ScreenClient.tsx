@@ -22,7 +22,12 @@ export default function ScreenClient({ photos }: { photos: Record<string, string
 
   useEffect(() => {
     const q = new URLSearchParams(location.search);
-    if (q.get('pin')) setPin(q.get('pin')!);
+    if (q.get('pin')) {
+      setPin(q.get('pin')!);
+      // Keep the PIN out of the address bar, history and screenshots once it is saved on this laptop.
+      q.delete('pin');
+      history.replaceState(null, '', location.pathname + (q.toString() ? `?${q}` : '') + location.hash);
+    }
     setParams({ at: q.get('at') ? hhmmToMs(q.get('at')!, Date.now()) : null, slide: q.get('slide'), pin: getPin() });
     setOrigin(location.origin);
     // Keep the projector laptop awake.
@@ -95,8 +100,7 @@ export default function ScreenClient({ photos }: { photos: Record<string, string
             slide={slide}
             state={{ ...state, overlay: null }}
             now={now}
-            votes={live?.votes}
-            pollDef={live?.pollDef}
+            polls={live?.polls}
             photos={photos}
             joinUrl={joinUrlFor(origin)}
             offline={!online}

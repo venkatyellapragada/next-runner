@@ -126,6 +126,11 @@
       "id": "faculty-control",
       "question": "In AI-assisted evaluation, where must the faculty stay in control?",
       "options": ["Setting the rubric", "Confirming every mark", "Reviewing only disputed scripts", "Moderating a sample"]
+    },
+    {
+      "id": "first-step",
+      "question": "Which work should AI take off your faculty's plate first?",
+      "options": ["Question paper setting", "Evaluation and marking", "Attendance and records", "Accreditation documentation"]
     }
   ],
 

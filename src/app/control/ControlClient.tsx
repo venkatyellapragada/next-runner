@@ -84,7 +84,7 @@ function Console({ pin, health, photos, onLock }: { pin: string; health: Health;
   );
 
   if (!data) return <main className="ctl"><p className="ctl-muted">Connecting…</p></main>;
-  const { state, votes, pollDef } = data;
+  const { state, polls } = data;
   const slide = slideById(state.slideId)!;
   const i = slideIndex(state.slideId);
   const upNext = i >= 0 ? slides[i + 1] : slideById(state.returnTo);
@@ -103,15 +103,22 @@ function Console({ pin, health, photos, onLock }: { pin: string; health: Health;
         <button className="link" onClick={onLock}>Lock</button>
       </header>
 
-      <section className="ctl-now">
+      <section className="ctl-now" id="screen">
         {origin && (
           <Fit style={{ width: '100%', aspectRatio: '16 / 9', border: '1px solid var(--line)', borderRadius: 4 }}>
-            {() => <Screen slide={slide} state={state} now={now} votes={votes} pollDef={pollDef} photos={photos} joinUrl={joinUrlFor(origin)} />}
+            {() => <Screen slide={slide} state={state} now={now} polls={polls} photos={photos} joinUrl={joinUrlFor(origin)} />}
           </Fit>
         )}
         <p className="ctl-onscreen">
           <span className="ctl-eyebrow">On screen</span>
-          {state.overlay === 'video' ? 'The NEXT film' : state.overlay === 'sim' ? 'The simulation' : `${slotOf(state.slideId)?.label ?? slide.name} · ${slide.name}`}
+          {state.overlay === 'video'
+            ? 'The NEXT film'
+            : state.overlay === 'sim'
+              ? 'The simulation'
+              : slotOf(state.slideId)
+                ? `${slotOf(state.slideId)!.label} · ${slide.name}`
+                : slide.name}
+          {state.focus && <span className="ctl-focus">Phones: {state.focus === 'poll' ? 'poll' : 'ask'}</span>}
         </p>
         <div className="ctl-nav">
           <button className="btn" disabled={busy} onClick={() => send({ type: 'prev' })}>Previous</button>
@@ -144,7 +151,21 @@ function Console({ pin, health, photos, onLock }: { pin: string; health: Health;
         {err && <p className="ctl-error">{err}</p>}
       </section>
 
-      <Section title="Running order">
+      <nav className="ctl-jump" aria-label="Sections">
+        {[
+          ['screen', 'Screen'],
+          ['order', 'Order'],
+          ['polls', 'Polls'],
+          ['questions', 'Questions'],
+          ['timer', 'Timer'],
+          ['notice', 'Notice'],
+          ['decks', 'Decks'],
+        ].map(([id, label]) => (
+          <a key={id} href={`#${id}`} onClick={() => openSection(id)}>{label}</a>
+        ))}
+      </nav>
+
+      <Section id="order" title="Running order">
         <ol className="ctl-order">
           {agenda.map((slot) => {
             const own = slides.filter((s) => s.slotId === slot.id);
@@ -173,19 +194,19 @@ function Console({ pin, health, photos, onLock }: { pin: string; health: Health;
         </ol>
       </Section>
 
-      <PollSection pin={pin} current={state.poll} onScreen={state.slideId === 'poll'} send={send} />
+      <PollSection pin={pin} open={state.poll.open} onScreen={state.slideId === 'poll'} send={send} />
       <QuestionsSection pin={pin} shown={state.questions} send={send} />
       <TimerSection endsAt={state.timer.endsAt} label={state.timer.label} now={now} send={send} />
       <NoticeSection notice={state.notice} send={send} />
 
-      <Section title="Feedback form">
+      <Section id="feedback" title="Feedback form">
         <p className="ctl-muted">Opening it puts the form at the top of the audience page. It is always reachable from there.</p>
         <button className={`btn ${state.feedbackOpen ? 'on' : ''}`} onClick={() => send({ type: 'feedback', open: !state.feedbackOpen })}>
           {state.feedbackOpen ? 'Feedback is open: close' : 'Open feedback now'}
         </button>
       </Section>
 
-      <Section title="Decks">
+      <Section id="decks" title="Decks" collapsible>
         <p className="ctl-muted">
           On the screen laptop, <b>D</b> opens the deck of the session on screen in a new tab; close the tab to return. The links also sit beside each session in the running order.
         </p>
@@ -208,11 +229,46 @@ function Console({ pin, health, photos, onLock }: { pin: string; health: Health;
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+// Collapsible sections remember whether they are open on this phone; the jump bar opens one it lands on.
+const openKey = (id: string) => 'next1-ctl-open-' + id;
+function openSection(id: string) {
+  try {
+    localStorage.setItem(openKey(id), '1');
+  } catch {}
+  window.dispatchEvent(new CustomEvent('ctl-open', { detail: id }));
+}
+
+function Section({ id, title, children, collapsible = false }: { id?: string; title: string; children: React.ReactNode; collapsible?: boolean }) {
+  const [open, setOpen] = useState(!collapsible);
+  useEffect(() => {
+    if (!collapsible || !id) return;
+    try {
+      setOpen(localStorage.getItem(openKey(id)) === '1');
+    } catch {}
+    const on = (e: Event) => (e as CustomEvent).detail === id && setOpen(true);
+    window.addEventListener('ctl-open', on);
+    return () => window.removeEventListener('ctl-open', on);
+  }, [collapsible, id]);
+  const toggle = () => {
+    const next = !open;
+    setOpen(next);
+    try {
+      if (id) localStorage.setItem(openKey(id), next ? '1' : '0');
+    } catch {}
+  };
   return (
-    <section className="ctl-section">
-      <h2>{title}</h2>
-      {children}
+    <section className="ctl-section" id={id}>
+      {collapsible ? (
+        <h2>
+          <button className="ctl-fold" aria-expanded={open} onClick={toggle}>
+            <span>{title}</span>
+            <span aria-hidden>{open ? '−' : '+'}</span>
+          </button>
+        </h2>
+      ) : (
+        <h2>{title}</h2>
+      )}
+      {open && children}
     </section>
   );
 }
@@ -221,7 +277,7 @@ type Send = (a: Action | { type: 'wipe-votes' } | { type: 'wipe-audience' }) => 
 
 type PollRow = Poll & { votes: number[] };
 
-function PollSection({ pin, current, onScreen, send }: { pin: string; current: { id: string; open: boolean }; onScreen: boolean; send: Send }) {
+function PollSection({ pin, open, onScreen, send }: { pin: string; open: boolean; onScreen: boolean; send: Send }) {
   const [polls, setPolls] = useState<PollRow[]>([]);
   const [adding, setAdding] = useState(false);
   const [question, setQuestion] = useState('');
@@ -245,58 +301,50 @@ function PollSection({ pin, current, onScreen, send }: { pin: string; current: {
       body: JSON.stringify({ question, options: options.split('\n') }),
     });
     const body = await res.json();
-    if (!body.ok) return setErr(body.error ?? 'Could not add the poll.');
+    if (!body.ok) return setErr(body.error ?? 'Could not add the question.');
     setQuestion('');
     setOptions('');
     setAdding(false);
-    await load();
-    await send({ type: 'poll-select', id: body.poll.id });
+    load();
   };
   const remove = async (id: string) => {
-    if (!confirm('Remove this poll and its votes?')) return;
+    if (!confirm('Remove this question and its votes?')) return;
     await fetch(`/api/polls?id=${encodeURIComponent(id)}`, { method: 'DELETE', headers: { 'x-pin': pin } });
     load();
   };
+  const responses = Math.max(0, ...polls.map((p) => p.votes.reduce((a, b) => a + b, 0)));
 
   return (
-    <Section title={`Polls (${polls.length})`}>
-      <p className="ctl-muted">One poll is current at a time: phones answer it while voting is open, and the results slide shows it. Picking another poll closes voting.</p>
-      <ul className="ctl-polls">
-        {polls.map((p) => {
-          const isCur = p.id === current.id;
+    <Section id="polls" title={`Pulse poll (${polls.length} questions)`} collapsible>
+      <p className="ctl-muted">
+        Opening voting sends phones through every question in turn. The results slide shows all of them with percentages. {responses} people have answered so far.
+      </p>
+      <div className="ctl-row" style={{ marginBottom: 12 }}>
+        <button className={`btn ${open ? 'on' : 'primary'}`} onClick={() => send({ type: 'poll', open: !open }).then(load)}>
+          {open ? 'Close voting' : 'Open voting'}
+        </button>
+        <button className={`btn ${onScreen ? 'on' : ''}`} onClick={() => send({ type: 'show', slideId: 'poll' })}>Show results on screen</button>
+        <button className="btn danger" onClick={() => confirm('Clear every vote on every question?') && send({ type: 'wipe-votes' }).then(load)}>Clear votes</button>
+      </div>
+      <ol className="ctl-polls">
+        {polls.map((p, qi) => {
           const total = p.votes.reduce((a, b) => a + b, 0);
           return (
-            <li key={p.id} className={isCur ? 'cur' : ''}>
+            <li key={p.id}>
               <div className="ctl-poll-head">
-                <p className="ctl-q">{p.question}</p>
-                <span className="ctl-tag">{isCur ? (current.open ? 'Current · voting open' : 'Current') : `${total} votes`}</span>
+                <p className="ctl-q">Q{qi + 1}. {p.question}</p>
+                <span className="ctl-tag">{total} votes</span>
               </div>
-              {isCur ? (
-                <>
-                  <ul className="ctl-votes">
-                    {p.options.map((o, i) => (
-                      <li key={o}><span>{o}</span><b>{p.votes[i]}</b></li>
-                    ))}
-                    <li className="total"><span>Total</span><b>{total}</b></li>
-                  </ul>
-                  <div className="ctl-row">
-                    <button className={`btn ${current.open ? 'on' : 'primary'}`} onClick={() => send({ type: 'poll', open: !current.open }).then(load)}>
-                      {current.open ? 'Close voting' : 'Open voting'}
-                    </button>
-                    <button className={`btn ${onScreen ? 'on' : ''}`} onClick={() => send({ type: 'show', slideId: 'poll' })}>Show results on screen</button>
-                    <button className="btn danger" onClick={() => confirm('Clear the votes on this poll?') && send({ type: 'wipe-votes' }).then(load)}>Clear votes</button>
-                  </div>
-                </>
-              ) : (
-                <div className="ctl-row">
-                  <button className="btn" onClick={() => send({ type: 'poll-select', id: p.id })}>Make current</button>
-                  {p.custom && <button className="btn danger" onClick={() => remove(p.id)}>Remove</button>}
-                </div>
-              )}
+              <ul className="ctl-votes">
+                {p.options.map((o, i) => (
+                  <li key={o}><span>{o}</span><b>{p.votes[i]}</b></li>
+                ))}
+              </ul>
+              {p.custom && <button className="btn danger" onClick={() => remove(p.id)}>Remove</button>}
             </li>
           );
         })}
-      </ul>
+      </ol>
       {adding ? (
         <div className="ctl-add">
           <label htmlFor="pq">Question</label>
@@ -305,12 +353,12 @@ function PollSection({ pin, current, onScreen, send }: { pin: string; current: {
           <textarea id="po" rows={5} value={options} onChange={(e) => setOptions(e.target.value)} />
           {err && <p className="ctl-error">{err}</p>}
           <div className="ctl-row">
-            <button className="btn primary" onClick={add}>Add and make current</button>
+            <button className="btn primary" onClick={add}>Add question</button>
             <button className="btn" onClick={() => setAdding(false)}>Cancel</button>
           </div>
         </div>
       ) : (
-        <button className="btn" onClick={() => setAdding(true)}>Add a poll</button>
+        <button className="btn" onClick={() => setAdding(true)}>Add a question</button>
       )}
     </Section>
   );
@@ -336,7 +384,7 @@ function QuestionsSection({ pin, shown, send }: { pin: string; shown: { id: stri
   const visible = list.filter((q) => all || (q.status !== 'hidden' && q.status !== 'answered'));
 
   return (
-    <Section title={`Questions (${list.length})`}>
+    <Section id="questions" title={`Questions (${list.length})`}>
       {shown.length > 0 && (
         <div className="ctl-shown">
           <p className="ctl-eyebrow">On screen, in order</p>
@@ -401,7 +449,7 @@ function TimerSection({ endsAt, label, now, send }: { endsAt: number | null; lab
   const running = !!endsAt && left > -60000;
   const start = (minutes: number) => send({ type: 'timer', minutes, label: lab });
   return (
-    <Section title="Timer">
+    <Section id="timer" title="Timer" collapsible>
       <p className="ctl-muted">
         Counts down on every slide: large on intro, break and opening slides, as a pill in the top row on the others. It clears itself a minute after it ends.
       </p>
@@ -431,7 +479,7 @@ const PRESETS = ['Please take your seats. We begin in two minutes.', 'Please set
 function NoticeSection({ notice, send }: { notice: string; send: Send }) {
   const [text, setText] = useState('');
   return (
-    <Section title="Notice band">
+    <Section id="notice" title="Notice band" collapsible>
       <p className="ctl-muted">One line along the bottom of the screen. {notice ? `Showing: “${notice}”` : 'Nothing showing.'}</p>
       <div className="ctl-row">
         <input className="grow" maxLength={120} placeholder="Type a notice" value={text} onChange={(e) => setText(e.target.value)} />
@@ -461,14 +509,27 @@ function ContentCheck({ photos }: { photos: Record<string, string> }) {
   );
 }
 
+async function download(pin: string, type: 'questions' | 'feedback' | 'poll') {
+  // The PIN travels in a header, never in a URL (history, logs, screenshots).
+  const res = await fetch(`/api/export?type=${type}`, { headers: { 'x-pin': pin } });
+  if (!res.ok) return alert('Download failed. Check the connection and try again.');
+  const url = URL.createObjectURL(await res.blob());
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `next-1.0-${type}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+
 function DataSection({ pin, send }: { pin: string; send: Send }) {
-  const q = `pin=${encodeURIComponent(pin)}`;
   return (
-    <Section title="Data">
+    <Section id="data" title="Data">
       <div className="ctl-row">
-        <a className="btn" href={`/api/export?type=questions&${q}`}>Questions CSV</a>
-        <a className="btn" href={`/api/export?type=feedback&${q}`}>Feedback CSV</a>
-        <a className="btn" href={`/api/export?type=poll&${q}`}>Poll CSV</a>
+        <button className="btn" onClick={() => download(pin, 'questions')}>Questions CSV</button>
+        <button className="btn" onClick={() => download(pin, 'feedback')}>Feedback CSV</button>
+        <button className="btn" onClick={() => download(pin, 'poll')}>Poll CSV</button>
       </div>
       <p className="ctl-muted">After the rehearsal: clear test questions, votes and feedback, and return the screen to Registrations.</p>
       <button

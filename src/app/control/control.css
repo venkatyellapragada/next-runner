@@ -84,3 +84,11 @@ input.num, input.grow { background: #fff; border-color: #d6d4cc; }
 .ctl-decklist { list-style: none; padding: 0; margin: 0 0 12px; }
 .ctl-decklist li { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--rule); }
 .ctl-decklist a { font-weight: 600; flex: none; }
+
+/* Sticky jump bar under the header */
+.ctl-jump { position: sticky; top: 41px; z-index: 2; display: flex; gap: 4px; overflow-x: auto; background: var(--paper); border-bottom: 1px solid var(--rule); padding: 6px 16px; margin: 0 -16px; scrollbar-width: none; }
+.ctl-jump a { flex: none; font-size: 14px; font-weight: 600; color: var(--ink-2); text-decoration: none; padding: 8px 12px; border-radius: 999px; border: 1px solid var(--rule); background: #fff; }
+.ctl-jump a:active { background: var(--bg-2); }
+.ctl-section, .ctl-now { scroll-margin-top: 110px; }
+.ctl-fold { all: unset; cursor: pointer; display: flex; justify-content: space-between; align-items: center; width: 100%; font: inherit; }
+.ctl-focus { margin-left: 10px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #fff; background: var(--indigo); padding: 3px 8px; border-radius: 999px; }
