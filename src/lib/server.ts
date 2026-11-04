@@ -18,7 +18,7 @@ export async function loadState(): Promise<LiveState> {
   if (!raw) return initialState;
   const saved = JSON.parse(raw) as LiveState;
   // State saved by earlier versions (a poll id, no focus) keeps working.
-  return { ...initialState, ...saved, poll: { open: !!saved.poll?.open }, focus: saved.focus ?? null };
+  return { ...initialState, ...saved, poll: { open: !!saved.poll?.open, openedAt: saved.poll?.openedAt }, focus: saved.focus ?? null };
 }
 export async function saveState(s: LiveState): Promise<void> {
   await redis('SET', K.state, JSON.stringify(s));

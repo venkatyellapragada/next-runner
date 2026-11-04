@@ -23,11 +23,13 @@ export default async function PrintPage() {
         const slot = slotById(slide.slotId)!;
         // The header and day strip show the moment the slot begins.
         const now = hhmmToMs(slot.start, Date.now()) + 60000;
-        return (
-          <section key={slide.id} className="print-page" data-slide={slide.id}>
-            <Screen slide={slide} state={{ ...initialState, slideId: slide.id }} now={now} photos={photos} joinUrl={joinUrl} print />
+        const page = (variant?: 'agenda') => (
+          <section key={slide.id + (variant ?? '')} className="print-page" data-slide={slide.id + (variant ? `:${variant}` : '')}>
+            <Screen slide={slide} state={{ ...initialState, slideId: slide.id }} now={now} photos={photos} joinUrl={joinUrl} print variant={variant} />
           </section>
         );
+        // Registrations alternates the cover with the agenda; the PDF carries both.
+        return slide.kind === 'holding' ? [page(), page('agenda')] : page();
       })}
     </div>
   );

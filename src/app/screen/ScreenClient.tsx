@@ -10,14 +10,18 @@ import { activeSlot, initialState, reduce, type Action, type Overlay } from '@/l
 // The projector page. Follows /control through /api/state. If the network dies it keeps the
 // last state, the clock keeps running, and the keyboard (or a USB clicker) still drives it:
 //   → / PageDown / Space   next            ← / PageUp   previous
-//   V   play the NEXT film        A   play the national anthem   S   show the simulation
+//   V   play the NEXT film        A A A   the national anthem (three presses within 2 s)   S   the simulation
 //   Q / Esc   back to the slides
 //   M   sound on/off (film)       F   full screen         D   open this session's deck in a new tab
 // Open once as /screen?pin=XXXX and the keyboard also moves /control's state.
 // Testing: ?at=10:25 freezes the clock, ?slide=keynote-1:speaker forces a slide.
+// A projector that crops its edges: ?safe=3 pulls the whole stage in by 3% on every side.
 export default function ScreenClient({ photos }: { photos: Record<string, string> }) {
   const { data: live, setData, online, offset } = useLive('/api/state', 1000);
-  const [params, setParams] = useState<{ at: number | null; slide: string | null; pin: string }>({ at: null, slide: null, pin: '' });
+  const [params, setParams] = useState<{ at: number | null; slide: string | null; pin: string; safe: number }>({ at: null, slide: null, pin: '', safe: 0 });
+  // The anthem needs A three times within 2 s, so a stray key never starts it.
+  const anthemPresses = useRef<number[]>([]);
+  const [anthemHint, setAnthemHint] = useState(0);
   const [local, setLocal] = useState<{ slideId: string; overlay: Overlay; v: number } | null>(null);
   const [origin, setOrigin] = useState('');
 
@@ -29,7 +33,8 @@ export default function ScreenClient({ photos }: { photos: Record<string, string
       q.delete('pin');
       history.replaceState(null, '', location.pathname + (q.toString() ? `?${q}` : '') + location.hash);
     }
-    setParams({ at: q.get('at') ? hhmmToMs(q.get('at')!, Date.now()) : null, slide: q.get('slide'), pin: getPin() });
+    const safe = Math.min(15, Math.max(0, Number(q.get('safe')) || 0));
+    setParams({ at: q.get('at') ? hhmmToMs(q.get('at')!, Date.now()) : null, slide: q.get('slide'), pin: getPin(), safe });
     setOrigin(location.origin);
     // Keep the projector laptop awake.
     (navigator as Navigator & { wakeLock?: { request(t: string): Promise<unknown> } }).wakeLock?.request('screen').catch(() => {});
@@ -52,7 +57,22 @@ export default function ScreenClient({ photos }: { photos: Record<string, string
       if (['arrowright', 'pagedown', ' ', 'enter'].includes(k)) action = { type: 'next' };
       else if (['arrowleft', 'pageup', 'backspace'].includes(k)) action = { type: 'prev' };
       else if (k === 'v') action = { type: 'overlay', overlay: state.overlay === 'video' ? null : 'video' };
-      else if (k === 'a') action = { type: 'overlay', overlay: state.overlay === 'anthem' ? null : 'anthem' };
+      else if (k === 'a') {
+        if (state.overlay === 'anthem') action = { type: 'overlay', overlay: null };
+        else {
+          const t = Date.now();
+          const recent = [...anthemPresses.current.filter((x) => t - x < 2000), t];
+          anthemPresses.current = recent;
+          if (recent.length >= 3) {
+            anthemPresses.current = [];
+            setAnthemHint(0);
+            action = { type: 'overlay', overlay: 'anthem' };
+          } else {
+            setAnthemHint(3 - recent.length);
+            return;
+          }
+        }
+      }
       else if (k === 's') action = { type: 'overlay', overlay: state.overlay === 'sim' ? null : 'sim' };
       else if (k === 'escape' || k === 'q') action = state.overlay ? { type: 'overlay', overlay: null } : null;
       else if (k === 'f') document.documentElement.requestFullscreen?.().catch(() => {});
@@ -79,6 +99,12 @@ export default function ScreenClient({ photos }: { photos: Record<string, string
     return () => window.removeEventListener('keydown', onKey);
   }, [state, server.v, params.pin, setData, offset]);
 
+  useEffect(() => {
+    if (!anthemHint) return;
+    const t = setTimeout(() => setAnthemHint(0), 2000);
+    return () => clearTimeout(t);
+  }, [anthemHint]);
+
   // Hide the cursor when it is not moving.
   useEffect(() => {
     let t: ReturnType<typeof setTimeout>;
@@ -96,7 +122,8 @@ export default function ScreenClient({ photos }: { photos: Record<string, string
   const slide = slideById(state.slideId) ?? slideById(initialState.slideId)!;
   return (
     <>
-      <Fit fill style={{ position: 'fixed', inset: 0 }} background={slide.kind === 'break' ? '#f1f3fa' : '#ffffff'}>
+      {params.safe > 0 && <div style={{ position: 'fixed', inset: 0, background: '#000' }} />}
+      <Fit fill style={{ position: 'fixed', inset: `${params.safe}vh ${params.safe}vw` }} background={slide.kind === 'break' ? '#f1f3fa' : '#ffffff'}>
         {(size) => (
           <Screen
             slide={slide}
@@ -110,6 +137,11 @@ export default function ScreenClient({ photos }: { photos: Record<string, string
           />
         )}
       </Fit>
+      {anthemHint > 0 && (
+        <div className="anthem-hint" role="status">
+          Press A {anthemHint === 1 ? 'once more' : 'twice more'} to play the national anthem
+        </div>
+      )}
       {state.overlay && (
         <Interlude
           kind={state.overlay}

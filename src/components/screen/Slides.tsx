@@ -39,6 +39,8 @@ export type ScreenProps = {
   print?: boolean;
   /** Stage size; 1920×1080 unless the screen has another shape. */
   size?: { w: number; h: number };
+  /** Print only: the registrations agenda page instead of the cover (live, the two alternate every 20 s). */
+  variant?: 'agenda';
 };
 
 const GROUND: Partial<Record<SlideKind, string>> = { holding: 'brand on-brand' };
@@ -48,22 +50,35 @@ const withFocus = (joinUrl: string, focus: 'poll' | 'ask') => `${joinUrl}${joinU
 // Slides with their own QR card: the footer drops its QR so there is only ever one, captioned for the slide.
 const OWN_QR: SlideKind[] = ['poll', 'questions', 'ask'];
 
+/** During registrations the cover and the agenda take turns, 20 s each. */
+export const AGENDA_TURN_MS = 20000;
+function showsAgenda(p: ScreenProps) {
+  if (p.slide.kind !== 'holding') return false;
+  return p.variant === 'agenda' || (!p.print && Math.floor(p.now / AGENDA_TURN_MS) % 2 === 1);
+}
+
 export function Screen(p: ScreenProps) {
   const { w, h } = p.size ?? { w: 1920, h: 1080 };
   const notice = p.state.notice.trim();
+  const agendaUp = showsAgenda(p);
+  const wall = p.slide.kind === 'poll' || isPollLoop(p.slide.id);
+  const ground = agendaUp ? 'paper' : GROUND[p.slide.kind] ?? 'paper';
+  // A notice moves the whole slide aside (smaller, to the left) and fills an indigo panel on the right.
   return (
-    <div className={`stage ${GROUND[p.slide.kind] ?? 'paper'}`} style={{ width: w, height: h }}>
-      <Top {...p} />
-      <div key={p.slide.id} className="content slide-enter" style={p.slide.kind === 'poll' ? { bottom: 64 } : undefined}>
-        <SlideBody {...p} />
-      </div>
-      {notice ? (
-        <div className="notice">
-          <span className="eyebrow">Notice</span>
-          <span className="clamp1">{notice}</span>
+    <div className={`stage ${ground}${notice ? ' has-notice' : ''}`} style={{ width: w, height: h }}>
+      <div className="frame">
+        <Top {...p} agendaUp={agendaUp} />
+        <div key={p.slide.id + (agendaUp ? ':agenda' : '')} className="content slide-enter" style={wall ? { bottom: 64 } : undefined}>
+          {agendaUp ? <AgendaScan {...p} /> : <SlideBody {...p} />}
         </div>
-      ) : p.slide.kind === 'poll' ? null : (
-        <Foot {...p} />
+        {!wall && <Foot {...p} agendaUp={agendaUp} />}
+      </div>
+      {notice && (
+        <aside className="notice-panel" key={notice}>
+          <p className="eyebrow">Notice</p>
+          <p className="notice-text" style={{ fontSize: notice.length <= 40 ? 84 : notice.length <= 80 ? 68 : 54 }}>{notice}</p>
+          <p className="eyebrow notice-foot">{event.name} · {fmtClock(p.now)}</p>
+        </aside>
       )}
       {p.state.overlay && <InterludeCard kind={p.state.overlay} />}
       {p.offline && <div className="offline-dot" title="Not reaching the server; showing the last known state" />}
@@ -89,8 +104,14 @@ function InterludeCard({ kind }: { kind: Exclude<LiveState['overlay'], null> }) 
 // Slides that already show the timer as their big number.
 const TIMER_SLIDES: SlideKind[] = ['holding', 'transition', 'break'];
 
-function Top({ now, print, state, slide }: ScreenProps) {
-  const chip = !print && timerActive(state, now) && !TIMER_SLIDES.includes(slide.kind);
+// Slides that introduce a session before it begins: a "Starts in" chip sits by the clock until the start.
+const STARTS_SLIDES: SlideKind[] = ['speaker', 'panel'];
+
+function Top({ now, print, state, slide, agendaUp }: ScreenProps & { agendaUp?: boolean }) {
+  const chip = !print && timerActive(state, now) && (agendaUp || !TIMER_SLIDES.includes(slide.kind));
+  const slot = slotById(slide.slotId);
+  const startMs = slot && STARTS_SLIDES.includes(slide.kind) ? slotWindow(slot, now).start - now : 0;
+  const starts = !print && !chip && startMs > 0;
   return (
     <div className="top">
       <Logo height={36} />
@@ -99,6 +120,12 @@ function Top({ now, print, state, slide }: ScreenProps) {
           <span className="timer-chip">
             <span className="eyebrow">{state.timer.label || 'Timer'}</span>
             <b>{state.timer.endsAt! > now ? fmtCountdown(state.timer.endsAt! - now) : 'Now'}</b>
+          </span>
+        )}
+        {starts && (
+          <span className="timer-chip">
+            <span className="eyebrow">{startMs > 60 * 60000 ? 'Starts at' : 'Starts in'}</span>
+            <b>{startMs > 60 * 60000 ? slot!.start : startMs >= 10 * 60000 ? `${Math.ceil(startMs / 60000)} min` : fmtCountdown(startMs)}</b>
           </span>
         )}
         <span className="eyebrow">Hyderabad · 05.11.2026</span>
@@ -113,7 +140,7 @@ function Top({ now, print, state, slide }: ScreenProps) {
   );
 }
 
-function Foot({ state, now, joinUrl, slide }: ScreenProps) {
+function Foot({ state, now, joinUrl, slide, agendaUp }: ScreenProps & { agendaUp?: boolean }) {
   const cur = activeSlot(state, now);
   const next = slotNext(cur?.id);
   return (
@@ -127,7 +154,7 @@ function Foot({ state, now, joinUrl, slide }: ScreenProps) {
         <p className="eyebrow">Next{next ? ` · ${next.start}` : ''}</p>
         <div className="t">{next ? next.label : 'Thank you'}</div>
       </div>
-      {!OWN_QR.includes(slide.kind) && !isPollLoop(slide.id) && (
+      {!OWN_QR.includes(slide.kind) && !isPollLoop(slide.id) && !agendaUp && (
         <div className="qr">
           <p className="eyebrow">Agenda &amp;<br />questions</p>
           <div className="qr-tile"><QR value={joinUrl} size={slide.kind === 'holding' ? 104 : 92} color="#0A0A0A" /></div>
@@ -234,6 +261,36 @@ function Holding({ slot, now, print, state }: ScreenProps & { slot: Slot }) {
         ) : (
           <p className="display" style={{ fontSize: 160, fontVariantNumeric: 'tabular-nums' }}>{begins?.start}</p>
         )}
+      </div>
+    </div>
+  );
+}
+
+// ── Registrations, turn two: today's agenda and the code to keep it on a phone ─
+function AgendaScan({ joinUrl, now, print }: ScreenProps) {
+  const items = agenda.filter((s) => s.kind !== 'holding');
+  const half = Math.ceil(items.length / 2);
+  const live = print ? undefined : agenda.find((s) => now >= slotWindow(s, now).start && now < slotWindow(s, now).end);
+  return (
+    <div className="cols" style={{ gap: 112 }}>
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+        <p className="eyebrow accent" style={{ marginBottom: 20 }}>Today · 05.11.2026 · {event.venue}</p>
+        <h1 className="heading resolve" style={{ fontSize: 76, fontWeight: 800, letterSpacing: '-0.03em' }}>The day at a glance</h1>
+        <div style={{ marginTop: 'auto', display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: 64 }}>
+          {[items.slice(0, half), items.slice(half)].map((col, ci) => (
+            <div key={ci}>
+              {col.map((s) => (
+                <div key={s.id} className="agenda-row" style={live?.id === s.id ? { color: 'var(--indigo)' } : undefined}>
+                  <span className="t">{s.start}</span>
+                  <span className="l clamp1">{s.label}</span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+      <div style={{ flex: 'none', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+        <QrPanel joinUrl={`${joinUrl}#agenda`} line="Scan for today's agenda" size={380} />
       </div>
     </div>
   );
@@ -586,72 +643,92 @@ function PollBars({ q, size = 24 }: { q: PollResult; size?: number }) {
   );
 }
 
-const POLL_TURN_MS = 12000;
+// ── The results wall: every question as a card, two columns, scrolling slowly on a loop ──
+// Used for the lunch break (voting open, "we resume in") and for the results slide put up from /control.
+// Phones answer; the screen only shows how the room answered.
+const SECONDS_PER_ROW = 8;
 
-// ── Lunch: the pulse poll plays one question at a time, live, with the QR to vote ──
-function PollLoop({ slot, state, now, polls, joinUrl, print }: ScreenProps & { slot: Slot }) {
-  const set: PollResult[] = polls?.length ? polls : seedPolls;
-  const i = print ? 0 : Math.floor(now / POLL_TURN_MS) % set.length;
-  const q = set[i];
-  const next = slotNext(slot.id);
-  const target = timerActive(state, now) ? state.timer.endsAt! : next ? slotWindow(next, now).start : slotWindow(slot, now).end;
-  const ms = target - now;
-  const back = print || ms > 60 * 60000 ? `We resume at ${fmtClock(target)}` : ms <= 0 ? 'Resuming now' : `We resume in ${ms >= 10 * 60000 ? `${Math.ceil(ms / 60000)} min` : fmtCountdown(ms)}`;
+function PollWall({ all, state, joinUrl, print, eyebrow, aside }: { all: PollResult[]; state: LiveState; joinUrl: string; print?: boolean; eyebrow: string; aside?: React.ReactNode }) {
+  const responses = Math.max(0, ...all.map((q) => (q.votes ?? []).reduce((a, b) => a + b, 0)));
+  const rows = Math.ceil(all.length / 2);
+  // Four cards fit without moving; more scroll, the list joined end to end so the loop has no seam.
+  const scroll = !print && all.length > 4;
+  const cards = (offset: number) =>
+    all.map((q, qi) => {
+      const total = (q.votes ?? []).reduce((a, b) => a + b, 0);
+      return (
+        <div key={q.id + offset} className="card poll-card">
+          <div style={{ display: 'flex', gap: 16, alignItems: 'baseline' }}>
+            <span className="eyebrow accent" style={{ fontSize: 20, flex: 'none' }}>Q{qi + 1}</span>
+            <p className="clamp2" style={{ margin: 0, fontSize: 28, fontWeight: 700, lineHeight: 1.18, letterSpacing: '-0.01em', flex: 1 }}>{q.question}</p>
+            <span className="eyebrow" style={{ fontSize: 16, flex: 'none' }}>{total} {total === 1 ? 'answer' : 'answers'}</span>
+          </div>
+          <div style={{ marginTop: 'auto' }}>
+            <PollBars q={q} />
+          </div>
+        </div>
+      );
+    });
   return (
-    <div style={{ display: 'flex', gap: 112, alignItems: 'stretch', height: '100%' }}>
-      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-        <p className="eyebrow accent" style={{ marginBottom: 28 }}>{slot.label} · Pulse poll · Q{i + 1} of {set.length}</p>
-        <h1 key={q.id} className="heading resolve" style={{ fontSize: 64, lineHeight: 1.1 }}>{q.question}</h1>
-        <div style={{ marginTop: 'auto' }}>
-          <PollBars q={q} size={34} />
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 48 }}>
+        <div style={{ minWidth: 0 }}>
+          <p className="eyebrow accent" style={{ marginBottom: 14 }}>{eyebrow}</p>
+          <h1 className="heading resolve" style={{ fontSize: 60, fontWeight: 800, letterSpacing: '-0.03em' }}>What the room thinks</h1>
+          <p className="heading muted" style={{ marginTop: 8, fontSize: 32, fontWeight: 500 }}>
+            <b className="accent" style={{ fontVariantNumeric: 'tabular-nums' }}>{responses}</b> {responses === 1 ? 'person has' : 'people have'} answered · {all.length} questions
+          </p>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 32, flex: 'none' }}>
+          {aside}
+          {print || state.poll.open ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 20, background: 'var(--bg-2)', borderRadius: 14, padding: '10px 14px' }}>
+              <p style={{ margin: 0, fontSize: 28, fontWeight: 700, textAlign: 'right', lineHeight: 1.2 }}>Vote on<br />your phone</p>
+              <div className="qr-tile"><QR value={withFocus(joinUrl, 'poll')} size={124} color="#0A0A0A" /></div>
+            </div>
+          ) : (
+            <p className="eyebrow" style={{ fontSize: 24 }}>Voting closed</p>
+          )}
         </div>
       </div>
-      <div style={{ flex: 'none', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-        <QrPanel joinUrl={withFocus(joinUrl, 'poll')} line={print || state.poll.open ? 'Scan to vote' : 'Voting closed'} size={360} />
-        <p className="heading" style={{ fontSize: 36, fontVariantNumeric: 'tabular-nums' }}>{back}</p>
+      <div className={`poll-wall${scroll ? ' scrolling' : ''}`}>
+        <div className="poll-track" style={scroll ? { animationDuration: `${rows * SECONDS_PER_ROW}s` } : undefined}>
+          <div className="poll-grid">{cards(0)}</div>
+          {scroll && <div className="poll-grid" aria-hidden>{cards(1)}</div>}
+        </div>
       </div>
     </div>
   );
 }
 
-// ── Poll results: every question in the set, with percentages ───────────
-function Poll({ state, polls, joinUrl, now, print }: ScreenProps) {
+// ── Lunch: the results wall with voting open and the time we resume ──
+function PollLoop({ slot, state, now, polls, joinUrl, print }: ScreenProps & { slot: Slot }) {
   const all: PollResult[] = polls?.length ? polls : seedPolls;
-  const responses = Math.max(0, ...all.map((q) => (q.votes ?? []).reduce((a, b) => a + b, 0)));
-  // Four questions fit; a longer set turns a page every 12 s (the PDF shows the first page).
-  const pages = Math.ceil(all.length / 4);
-  const page = print ? 0 : Math.floor(now / POLL_TURN_MS) % pages;
-  const set = all.slice(page * 4, page * 4 + 4);
-  const cols = set.length > 2 ? 2 : 1;
+  const next = slotNext(slot.id);
+  const target = timerActive(state, now) ? state.timer.endsAt! : next ? slotWindow(next, now).start : slotWindow(slot, now).end;
+  const ms = target - now;
+  const far = print || ms > 60 * 60000;
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 48 }}>
-        <div>
-          <p className="eyebrow accent" style={{ marginBottom: 14 }}>§ Pulse poll · {all.length} questions{pages > 1 ? ` · page ${page + 1} of ${pages}` : ''} · {responses} {responses === 1 ? 'response' : 'responses'}</p>
-          <h1 className="heading resolve" style={{ fontSize: 52, fontWeight: 800, letterSpacing: '-0.03em' }}>What the room thinks</h1>
+    <PollWall
+      all={all}
+      state={state}
+      joinUrl={joinUrl}
+      print={print}
+      eyebrow={`${slot.label} · ${range(slot)} · Pulse poll`}
+      aside={
+        <div style={{ textAlign: 'right' }}>
+          <p className="eyebrow" style={{ marginBottom: 6 }}>{far ? 'We resume at' : 'We resume in'}</p>
+          <p className="display" style={{ fontSize: 72, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.03em' }}>
+            {far ? fmtClock(target) : ms <= 0 ? 'Now' : ms >= 10 * 60000 ? `${Math.ceil(ms / 60000)} min` : fmtCountdown(ms)}
+          </p>
         </div>
-        {state.poll.open ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 20, background: 'var(--bg-2)', borderRadius: 14, padding: '10px 14px', flex: 'none' }}>
-            <p style={{ margin: 0, fontSize: 28, fontWeight: 700, textAlign: 'right', lineHeight: 1.2 }}>Vote on<br />your phone</p>
-            <div className="qr-tile"><QR value={withFocus(joinUrl, 'poll')} size={112} color="#0A0A0A" /></div>
-          </div>
-        ) : (
-          <p className="eyebrow" style={{ fontSize: 24, flex: 'none', marginTop: 8 }}>Voting closed</p>
-        )}
-      </div>
-      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gridAutoRows: '1fr', gap: 20, minHeight: 0 }}>
-        {set.map((q, qi) => (
-          <div key={q.id} className="card" style={{ padding: '18px 26px', display: 'flex', flexDirection: 'column', gap: 10, minHeight: 0, overflow: 'hidden' }}>
-            <div style={{ display: 'flex', gap: 16, alignItems: 'baseline' }}>
-              <span className="eyebrow accent" style={{ fontSize: 20, flex: 'none' }}>Q{page * 4 + qi + 1}</span>
-              <p style={{ margin: 0, fontSize: 27, fontWeight: 700, lineHeight: 1.18, letterSpacing: '-0.01em' }}>{q.question}</p>
-            </div>
-            <div style={{ marginTop: 'auto' }}>
-              <PollBars q={q} />
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
+      }
+    />
   );
+}
+
+// ── Poll results: put up from /control at any moment ───────────
+function Poll({ state, polls, joinUrl, print }: ScreenProps) {
+  const all: PollResult[] = polls?.length ? polls : seedPolls;
+  return <PollWall all={all} state={state} joinUrl={joinUrl} print={print} eyebrow="§ Pulse poll · Results" />;
 }

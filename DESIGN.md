@@ -56,9 +56,16 @@ Third pass (3 Nov, evening). Built on two sources:
 - Footer row above a hairline: **Now** (eyebrow, title, indigo progress), **Next**, then the QR to /join.
 - Photos: 14 px radius, no frame, no shadow. Missing photo = initials on `bg-2`.
 
+- *Starts in* and timer chips: gradient pill beside the clock, mono label, tabular figures.
+- Notice: the whole slide scales to 60% and moves left (28 px radius, soft shadow, on `#DFE2EE`); an indigo
+  panel with the notice in 54–84 px white takes the right third.
+- Poll results wall: question cards in two columns; more than four scroll upward on a seamless loop
+  (8 s per row) between soft fades. Leading answer in indigo, others `--rule-strong`.
+
 ## Motion
 420 ms fade-and-rise on slide change; headline resolves from 20% to full in 600 ms. Progress advances once a
-second. Reduced motion: fades only. Nothing loops.
+second. The notice moves the slide aside in 700 ms. The only loop is the poll results wall's slow scroll.
+Reduced motion: fades only, the wall holds still.
 
 ## Interludes
 The NEXT film (**V**) and the Campx AI-University simulation (**S**, served from `/sim/`), full screen; **Q** or

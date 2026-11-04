@@ -4,7 +4,7 @@
 .jn-by { display: inline-flex; align-items: baseline; gap: 6px; color: var(--ink-2); font-size: 13px; }
 .jn-sub { margin: 8px 0 0; color: var(--ink-3); font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; }
 
-.jn-tabs { position: sticky; top: 0; z-index: 2; display: grid; grid-template-columns: repeat(4, 1fr); background: var(--paper); border-bottom: 1px solid var(--line); padding: 0 8px; }
+.jn-tabs { position: sticky; top: 0; z-index: 2; display: grid; grid-template-columns: repeat(5, 1fr); background: var(--paper); border-bottom: 1px solid var(--line); padding: 0 8px; }
 .jn-tabs button { background: none; border: 0; border-bottom: 2px solid transparent; padding: 12px 4px 10px; font-weight: 600; color: var(--ink-3); cursor: pointer; }
 .jn-tabs button.on { color: var(--brand); border-bottom-color: var(--brand); }
 
@@ -43,7 +43,8 @@
 .jn-results li { margin-bottom: 10px; }
 .jn-results .lab { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; }
 .jn-results .jn-bar { margin: 4px 0 0; height: 6px; }
-.jn-results li:not(.mine) .jn-bar > div { background: var(--ink-3); }
+.jn-results li:not(.mine) .jn-bar > div { background: var(--rule-strong); transition: width 600ms ease; }
+.jn-results li.lead:not(.mine) .jn-bar > div { background: var(--indigo); }
 .jn-results li.mine .lab span { font-weight: 600; }
 
 .jn-agenda { list-style: none; margin: 0; padding: 0; }
@@ -84,3 +85,19 @@
 .jn-result:first-of-type { border-top: 0; }
 .jn-result .jn-strong { margin-bottom: 6px; }
 .jn-tag.now.muted { color: var(--ink-3); }
+
+/* Notice from /control, top of Now */
+.jn-notice { background: var(--indigo); color: #fff; border-radius: 4px; padding: 14px 16px; animation: jn-in 400ms ease-out both; }
+.jn-notice .jn-eyebrow { color: rgba(255, 255, 255, 0.78); }
+.jn-notice p:last-child { margin: 0; font-family: var(--display); font-size: 20px; font-weight: 600; line-height: 1.3; }
+@keyframes jn-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+
+/* Poll: progress, skip, the short look at the room */
+.jn-progress { height: 4px; border-radius: 2px; background: var(--rule); overflow: hidden; margin: 0 0 14px; }
+.jn-progress > div { height: 100%; background: var(--brand-gradient); transition: width 400ms ease; }
+.jn-skip { background: none; border: 0; color: var(--ink-3); font-size: 14px; text-decoration: underline; padding: 10px 0 0; cursor: pointer; align-self: center; }
+.jn-reveal { animation: jn-in 300ms ease-out both; }
+.jn-tag.muted { color: var(--ink-3); }
+
+/* Watch */
+.jn-video { width: 100%; aspect-ratio: 16 / 9; background: #000; border-radius: 4px; display: block; margin-bottom: 8px; }

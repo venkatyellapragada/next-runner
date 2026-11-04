@@ -44,7 +44,6 @@
     },
     {
       "id": "address", "start": "09:45", "end": "10:15", "kind": "talk",
-      "askAfter": true,
       "label": "Guest of Honour Address", "title": "AI Forward Academics",
       "anthem": true,
       "askAfterAnthem": true,
@@ -52,14 +51,12 @@
     },
     {
       "id": "keynote-1", "start": "10:30", "end": "11:15", "kind": "talk",
-      "askAfter": true,
       "label": "Campx Keynote 1", "title": "Next Generation Academic Ecosystem",
       "speakers": ["srikanth-yellapragada"],
       "topics": ["AI Assisted Digital Evaluation", "Tablet-based Examinations", "AI Content Studio", "Learning Management System"]
     },
     {
       "id": "panel", "start": "11:30", "end": "12:20", "kind": "panel",
-      "askAfter": true,
       "label": "Leadership Panel", "title": "Leading with AI, Anchored in Values",
       "subtitle": "What Changes, What Must Not",
       "moderator": "venkat-yellapragada",
@@ -71,7 +68,6 @@
     },
     {
       "id": "keynote-2", "start": "12:30", "end": "13:00", "kind": "talk",
-      "askAfter": true,
       "label": "Campx Keynote 2", "title": "Next Generation Accreditations Management",
       "deck": { "title": "Next Generation Accreditation", "url": "https://claude.ai/artifact/1dmjKSZRKJkGVAuzk8t3H4?sk=4C1ICv2omuxDGnYIz6hBlQ" },
       "speakers": ["bala-nagendra-prasad"],
@@ -79,7 +75,6 @@
     },
     {
       "id": "winnify", "start": "13:00", "end": "13:15", "kind": "talk",
-      "askAfter": true,
       "label": "Partner session", "title": "Communication Intelligence Platform",
       "subtitle": "Winnify, Campx Partner",
       "speakers": ["ravikiran-pothineni"], "topics": []
@@ -92,7 +87,6 @@
     },
     {
       "id": "google", "start": "14:15", "end": "14:45", "kind": "talk",
-      "askAfter": true,
       "label": "Google Keynote", "title": "DCGC 4.0",
       "subtitle": "Digital Campus on Google Cloud",
       "speakers": ["surya-nigam", "siddharth-dalwadi"],
@@ -118,7 +112,8 @@
     {
       "id": "keynote-4", "start": "16:20", "end": "17:00", "kind": "talk",
       "label": "Campx Keynote 4", "title": "Building Education Infrastructure for the Country",
-      "speakers": ["venkat-yellapragada"], "topics": []
+      "speakers": ["venkat-yellapragada"], "topics": [],
+      "deck": { "title": "Building Education Infrastructure for the Country", "url": "https://claude.ai/artifact/VFtPLzZNe21EZFbQfQn9Pi" }
     },
     {
       "id": "closing", "start": "17:10", "end": "18:00", "kind": "talk",

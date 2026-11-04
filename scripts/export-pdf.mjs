@@ -40,7 +40,7 @@ await page.pdf({ path: pdf, width: '1920px', height: '1080px', printBackground: 
 const pages = await page.$$('.print-page');
 for (const [i, el] of pages.entries()) {
   const id = await el.getAttribute('data-slide');
-  await el.screenshot({ path: `${out}slides/${String(i + 1).padStart(2, '0')}-${id.replace(':', '-')}.png` });
+  await el.screenshot({ path: `${out}slides/${String(i + 1).padStart(2, '0')}-${id.replaceAll(':', '-')}.png` });
 }
 await browser.close();
 console.log(`Wrote ${pdf} and ${pages.length} PNGs in exports/slides/ from ${base}/print`);

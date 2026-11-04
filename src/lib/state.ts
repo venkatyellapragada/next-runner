@@ -12,7 +12,8 @@ export type LiveState = {
   /** Where to go back to after poll results or questions were put up out of order. */
   returnTo: string | null;
   /** The pulse poll: every question in it is answered in turn while voting is open. */
-  poll: { open: boolean };
+  /** openedAt: when voting last opened (shown on /control). */
+  poll: { open: boolean; openedAt?: number };
   focus: Focus;
   /** Questions picked on /control, in the order they appear on screen. The first is "now". */
   questions: ShownQuestion[];
@@ -47,7 +48,7 @@ export type Action =
   | { type: 'next' }
   | { type: 'prev' }
   | { type: 'go'; slideId: string }
-  | { type: 'show'; slideId: 'poll' | 'questions' }
+  | { type: 'show'; slideId: 'poll' | 'questions' | 'ask' }
   | { type: 'back' }
   | { type: 'poll'; open: boolean }
   | { type: 'q-show'; q: ShownQuestion }
@@ -79,16 +80,7 @@ function withFocus(prev: LiveState, next: LiveState, a: Action): LiveState {
 }
 
 export function reduce(s: LiveState, a: Action, now: number): LiveState {
-  let next = step(s, a, now);
-  // The lunch poll opens voting when the room walks onto it from another session, and closes it when the room
-  // walks on to the next one. Moves within lunch, or through poll results/questions and back, leave it alone,
-  // so a hand-closed poll stays closed and the votes stop being fetched on every refresh after lunch.
-  if (next !== s && next.slideId !== s.slideId && slideIndex(s.slideId) >= 0 && slideIndex(next.slideId) >= 0) {
-    const from = slideById(s.slideId)?.slotId;
-    const to = slideById(next.slideId)?.slotId;
-    if (from !== to && isPollLoop(next.slideId) && !next.poll.open) next = { ...next, poll: { open: true } };
-    else if (from !== to && slotById(from)?.pollLoop && next.poll.open) next = { ...next, poll: { open: false } };
-  }
+  const next = step(s, a, now);
   return next === s ? s : withFocus(s, next, a);
 }
 
@@ -117,7 +109,7 @@ function step(s: LiveState, a: Action, now: number): LiveState {
     case 'back':
       return { ...n, slideId: inOrder(s.returnTo ?? s.slideId), returnTo: null };
     case 'poll':
-      return { ...n, poll: { open: a.open } };
+      return { ...n, poll: { open: a.open, openedAt: a.open ? (s.poll.open ? s.poll.openedAt : now) : s.poll.openedAt } };
     case 'q-show':
       if (s.questions.some((q) => q.id === a.q.id)) return s;
       return { ...n, questions: [...s.questions, a.q].slice(-MAX_SHOWN) };

@@ -10,11 +10,12 @@ import { deviceId, useLive, useNow } from '@/lib/live';
 import { activeSlot, type Focus, type PollResult } from '@/lib/state';
 import './join.css';
 
-type Tab = 'now' | 'agenda' | 'ask' | 'feedback';
+type Tab = 'now' | 'agenda' | 'ask' | 'watch' | 'feedback';
 const TABS: [Tab, string][] = [
   ['now', 'Now'],
   ['agenda', 'Agenda'],
   ['ask', 'Ask'],
+  ['watch', 'Watch'],
   ['feedback', 'Feedback'],
 ];
 
@@ -71,6 +72,7 @@ export default function JoinClient({ photos }: { photos: Record<string, string> 
   const cur = state ? activeSlot(state, now) : undefined;
   const polls = live?.polls ?? [];
   const pollOpen = !!state?.poll.open;
+  const notice = state?.notice.trim();
 
   return (
     <div className="jn">
@@ -90,6 +92,12 @@ export default function JoinClient({ photos }: { photos: Record<string, string> 
       </nav>
 
       <main className="jn-main">
+        {tab === 'now' && notice && (
+          <section className="jn-notice" role="status">
+            <p className="jn-eyebrow">Notice</p>
+            <p>{notice}</p>
+          </section>
+        )}
         {tab === 'now' &&
           (focus === 'poll' ? (
             // The screen is asking for votes: the poll comes first, the question button only after voting.
@@ -114,6 +122,7 @@ export default function JoinClient({ photos }: { photos: Record<string, string> 
           ))}
         {tab === 'agenda' && <Agenda cur={cur} photos={photos} open={open} setOpen={setOpen} decksPublished={!!state?.decksPublished} />}
         {tab === 'ask' && <Ask />}
+        {tab === 'watch' && <Watch />}
         {tab === 'feedback' && <Feedback />}
       </main>
       <footer className="jn-foot">
@@ -279,43 +288,120 @@ async function post(url: string, body: unknown): Promise<{ ok: boolean; error?: 
   }
 }
 
-/** The pulse poll: each question in turn, one answer per question on this phone, then the results. */
+/** The NEXT film and the AI-University simulation, on the phone. Nothing loads until asked. */
+function Watch() {
+  const { video, simulation } = data.interludes;
+  return (
+    <>
+      <section className="jn-card">
+        <p className="jn-eyebrow">The film</p>
+        <h2 className="jn-title-sm" style={{ marginBottom: 12 }}>{video.title}</h2>
+        <video className="jn-video" src={video.src} poster={video.poster} controls playsInline preload="none" />
+        <p className="jn-muted">About 12 MB. Sound on; headphones if you are in the hall.</p>
+      </section>
+      {simulation.url && (
+        <section className="jn-card">
+          <p className="jn-eyebrow">Explore</p>
+          <h2 className="jn-title-sm">{simulation.title}</h2>
+          <p className="jn-muted">Walk through a day at a university run on Campx: the people, the places and the work that moves between them.</p>
+          <a className="jn-btn primary wide" href={simulation.url} target="_blank" rel="noreferrer">Open the simulation</a>
+          <p className="jn-muted" style={{ marginTop: 8 }}>Opens in a new tab. Works best on a recent phone, held sideways.</p>
+        </section>
+      )}
+    </>
+  );
+}
+
+type Answer = number | 'skip';
+const REVEAL_MS = 2000;
+
+/** The pulse poll: each question in turn (answer or skip), a short look at the room after each answer,
+ *  then a summary of every question with this phone's choices marked. */
 function PollFlow({ polls, open, onDone }: { polls: PollResult[]; open: boolean; onDone: (done: boolean) => void }) {
-  const [answers, setAnswers] = useState<Record<string, number>>({});
+  const [answers, setAnswers] = useState<Record<string, Answer>>({});
   const [votes, setVotes] = useState<Record<string, number[]>>({});
+  const [reveal, setReveal] = useState<string | null>(null);
   const [err, setErr] = useState('');
   const [sending, setSending] = useState(false);
   const ids = polls.map((p) => p.id).join(',');
   useEffect(() => {
-    const a: Record<string, number> = {};
+    const a: Record<string, Answer> = {};
     for (const p of polls) {
       const v = remember('vote-' + p.id);
-      if (v) a[p.id] = Number(v);
+      if (v) a[p.id] = v === 'skip' ? 'skip' : Number(v);
     }
     setAnswers(a);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ids]);
+  useEffect(() => {
+    if (!reveal) return;
+    const t = setTimeout(() => setReveal(null), REVEAL_MS);
+    return () => clearTimeout(t);
+  }, [reveal]);
   const nextQ = polls.find((p) => answers[p.id] === undefined);
-  const done = polls.length > 0 && !nextQ;
+  const done = polls.length > 0 && !nextQ && !reveal;
   useEffect(() => onDone(done), [done, onDone]);
 
   if (!polls.length) return null;
-  if (!open && !done)
+  const answered = polls.filter((p) => answers[p.id] !== undefined).length;
+  const skipped = polls.filter((p) => answers[p.id] === 'skip');
+  const progress = (
+    <div className="jn-progress" aria-label={`${answered} of ${polls.length} answered`}>
+      <div style={{ width: `${(answered / polls.length) * 100}%` }} />
+    </div>
+  );
+  const bars = (p: PollResult, mine?: Answer) => {
+    const counts = votes[p.id] ?? p.votes;
+    const total = counts?.reduce((a, b) => a + b, 0) ?? 0;
+    const max = counts ? Math.max(...counts) : 0;
+    return (
+      <ul className="jn-results">
+        {p.options.map((o, i) => {
+          const share = total && counts ? counts[i] / total : 0;
+          return (
+            <li key={o} className={`${i === mine ? 'mine' : ''} ${total && counts && counts[i] === max ? 'lead' : ''}`}>
+              <div className="lab">
+                <span>{o}{i === mine && <span className="jn-tag">You</span>}</span>
+                <b>{counts ? `${Math.round(share * 100)}%` : ''}</b>
+              </div>
+              {counts && <div className="jn-bar"><div style={{ width: `${share * 100}%` }} /></div>}
+            </li>
+          );
+        })}
+      </ul>
+    );
+  };
+
+  if (!open && answered === 0)
     return (
       <section className="jn-card">
         <p className="jn-eyebrow">Pulse poll</p>
         <h2 className="jn-title-sm">Voting opens shortly.</h2>
-        <p className="jn-muted">Keep this page open; the questions appear here when the screen asks for them.</p>
+        <p className="jn-muted">Keep this page open; the questions appear here when voting opens.</p>
       </section>
     );
+
+  // Just answered: the room so far, for a moment, then the next question.
+  const shown = reveal ? polls.find((p) => p.id === reveal) : undefined;
+  if (shown) {
+    const k = polls.indexOf(shown);
+    return (
+      <section className="jn-card jn-reveal">
+        <p className="jn-eyebrow">Pulse poll · Question {k + 1} of {polls.length} · The room so far</p>
+        {progress}
+        <h2 className="jn-title-sm" style={{ marginBottom: 12 }}>{shown.question}</h2>
+        {bars(shown, answers[shown.id])}
+        <button className="jn-btn wide" onClick={() => setReveal(null)}>{nextQ ? 'Next question' : 'See all results'}</button>
+      </section>
+    );
+  }
+
   if (nextQ && open) {
     const k = polls.indexOf(nextQ);
     return (
-      <section className="jn-card">
+      <section className="jn-card" key={nextQ.id}>
         <p className="jn-eyebrow">Pulse poll · Question {k + 1} of {polls.length}</p>
-        <div className="jn-steps" aria-hidden>
-          {polls.map((p, i) => <span key={p.id} className={i < k ? 'done' : i === k ? 'cur' : ''} />)}
-        </div>
+        {progress}
         <h2 className="jn-title-sm" style={{ marginBottom: 12 }}>{nextQ.question}</h2>
         <div className="jn-options">
           {nextQ.options.map((o, i) => (
@@ -332,6 +418,7 @@ function PollFlow({ polls, open, onDone }: { polls: PollResult[]; open: boolean;
                   remember('vote-' + nextQ.id, String(i));
                   setAnswers((a) => ({ ...a, [nextQ.id]: i }));
                   if (r.votes) setVotes((v) => ({ ...v, [nextQ.id]: r.votes! }));
+                  setReveal(nextQ.id);
                 } else setErr(r.error ?? 'Could not record your answer.');
               }}
             >
@@ -339,35 +426,51 @@ function PollFlow({ polls, open, onDone }: { polls: PollResult[]; open: boolean;
             </button>
           ))}
           {err && <p className="jn-error">{err}</p>}
+          <button
+            className="jn-skip"
+            disabled={sending}
+            onClick={() => {
+              remember('vote-' + nextQ.id, 'skip');
+              setAnswers((a) => ({ ...a, [nextQ.id]: 'skip' }));
+            }}
+          >
+            Skip this question
+          </button>
         </div>
       </section>
     );
   }
-  // Every question answered (or voting closed after answering some): show what the room said so far.
+
+  // Every question answered or skipped (or voting closed part-way): what the room said, with this phone's choices.
   return (
     <section className="jn-card">
-      <p className="jn-eyebrow">Pulse poll · {done ? 'Thank you' : 'Voting closed'}</p>
-      {polls.map((p, qi) => {
-        const counts = votes[p.id] ?? p.votes;
-        const total = counts?.reduce((a, b) => a + b, 0) ?? 0;
-        return (
-          <div key={p.id} className="jn-result">
-            <p className="jn-strong">Q{qi + 1}. {p.question}</p>
-            <ul className="jn-results">
-              {p.options.map((o, i) => {
-                const share = total && counts ? counts[i] / total : 0;
-                return (
-                  <li key={o} className={i === answers[p.id] ? 'mine' : ''}>
-                    <div className="lab"><span>{o}</span><b>{counts ? `${Math.round(share * 100)}%` : ''}</b></div>
-                    {counts && <div className="jn-bar"><div style={{ width: `${share * 100}%` }} /></div>}
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        );
-      })}
-      <p className="jn-muted">Results are on the big screen.</p>
+      <p className="jn-eyebrow">Pulse poll · {open ? 'Your answers and the room' : 'Voting closed'}</p>
+      {progress}
+      <p className="jn-muted" style={{ marginBottom: 4 }}>
+        You answered {answered - skipped.length} of {polls.length}
+        {skipped.length ? `, skipped ${skipped.length}` : ''}.
+      </p>
+      {open && skipped.length > 0 && (
+        <button
+          className="jn-btn wide"
+          onClick={() => {
+            for (const p of skipped) remember('vote-' + p.id, '');
+            setAnswers((a) => Object.fromEntries(Object.entries(a).filter(([, v]) => v !== 'skip')));
+          }}
+        >
+          Answer the {skipped.length === 1 ? 'one' : skipped.length} you skipped
+        </button>
+      )}
+      {polls.map((p, qi) => (
+        <div key={p.id} className="jn-result">
+          <p className="jn-strong">
+            Q{qi + 1}. {p.question}
+            {answers[p.id] === 'skip' && <span className="jn-tag muted">Skipped</span>}
+          </p>
+          {bars(p, answers[p.id])}
+        </div>
+      ))}
+      <p className="jn-muted">Results are on the big screen too.</p>
     </section>
   );
 }

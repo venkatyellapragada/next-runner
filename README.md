@@ -6,8 +6,8 @@ Google Hyderabad, Kondapur.
 | Route | Who | What |
 |---|---|---|
 | `/screen` | projector | slides for every agenda slot, header with clock, agenda tracker and QR |
-| `/control` | the person running the day (phone, PIN) | next/previous, jump, poll, questions, break timer, notice |
-| `/join` | audience, via the QR (no login) | now and agenda, speaker bios, ask a question, pulse poll, feedback, decks |
+| `/control` | the person running the day (phone, PIN) | tabs: Screen, Agenda, Polls, Questions, More; next/previous docked at the bottom |
+| `/join` | audience, via the QR (no login) | now and agenda, speaker bios, ask a question, pulse poll, the film and the simulation (Watch), feedback, decks |
 | `/print` | AV desk | every slide on one page each, for the PDF fallback |
 | `/sim/` | screen (interlude) | the Campx AI-University simulation, a static build served from `public/sim` |
 
@@ -30,20 +30,22 @@ Day-of instructions: **RUNBOOK.md**. Look and feel: **DESIGN.md**.
 
 ## Data model
 - `content/event.json` — event, people, agenda slots, polls, roles, interludes, deck links. Edit and redeploy.
-- Live state (Redis key `next1:state`): `{ v, slideId, returnTo, poll: {open}, focus, questions: [shown],
+- Live state (Redis key `next1:state`): `{ v, slideId, returnTo, poll: {open, openedAt}, focus, questions: [shown],
   timer: {endsAt, label}, notice, feedbackOpen, decksPublished, overlay }`. `v` increments on every change.
   `focus` ("poll" | "ask" | null) is set by control actions and tells /join what to put first.
-- Pulse poll: the questions in `polls` in `content/event.json` (four), plus any added from /control (Redis
+- Pulse poll: the questions in `polls` in `content/event.json` (fourteen), plus any added from /control (Redis
   `next1:polls`), answered in order while voting is open. Votes per question in `next1:votes:<id>`, one per device
   (`next1:voters:<id>`).
 - The control PIN travels only in the `x-pin` header (never a URL); CSV exports are fetched with it.
 - Audience data (Redis): questions list plus a status per question, poll votes hash plus a
   voter set, feedback list. Exported as CSV from /control.
 
-Slides are derived from the agenda: a talk gives a *transition* and a *speaker* slide, the panel a
-*transition* and a *panel* slide, breaks and registration a *holding* slide, the Open Forum a
-*transition* and the *questions* slide. *Poll results* and *questions* can be put on screen at any time
-from /control and return to where you were.
+Slides are derived from the agenda: one *speaker* slide per talk (a *Starts in* chip until the start
+time), one *panel* slide, a *break* slide per break (lunch shows the poll results wall), a *holding* slide
+for registration (alternating with the agenda every 20 s), the Open Forum a *transition*. `anthem: true`
+adds the *Please rise* slide; `askAfterAnthem` / `askAfter` add a *Questions for the Open Forum?* slide.
+*Poll results*, *questions* and the *question prompt* can be put on screen at any time from /control and
+return to where you were.
 
 ## Interludes
 - The NEXT film: `public/media/next-feature.mp4` (poster `next-feature-poster.jpg`). Replace the file to change it.

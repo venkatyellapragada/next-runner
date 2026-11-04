@@ -65,8 +65,8 @@ export type Slide = { id: string; kind: SlideKind; slotId: string | null; name: 
 
 const perSlot: Record<SlotKind, SlideKind[]> = {
   holding: ['holding'],
-  talk: ['transition', 'speaker'],
-  panel: ['transition', 'panel'],
+  talk: ['speaker'],
+  panel: ['panel'],
   break: ['break'],
   forum: ['transition'],
 };
@@ -97,7 +97,9 @@ export const slides: Slide[] = agenda.flatMap((slot) => {
 /** Slides that are not part of the running order; /control puts them up and returns. */
 export const POLL_SLIDE: Slide = { id: 'poll', kind: 'poll', slotId: null, name: 'Poll results' };
 export const QUESTIONS_SLIDE: Slide = { id: 'questions', kind: 'questions', slotId: null, name: 'Questions' };
-export const extraSlides = [POLL_SLIDE, QUESTIONS_SLIDE];
+/** The 'send your questions' prompt, put up from /control at any moment. */
+export const ASK_SLIDE: Slide = { id: 'ask', kind: 'ask', slotId: null, name: 'Question prompt' };
+export const extraSlides = [POLL_SLIDE, QUESTIONS_SLIDE, ASK_SLIDE];
 
 export const FIRST_SLIDE = slides[0].id;
 
