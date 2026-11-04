@@ -23,6 +23,12 @@ export type Slot = {
   askAfter?: boolean;
   /** The same slide right after the anthem, before the slot's intro. */
   askAfterAnthem?: boolean;
+  /** Of several speakers, the one who presents: the session gets a slide with everyone, then one with the presenter. */
+  presenter?: string;
+  /** `false`: the headline slide carries no speaker name at its foot. */
+  signoff?: false;
+  /** Close the slot with the "Thank you" slide and the QR to the feedback form. */
+  thanks?: boolean;
   /** A break that plays the pulse poll on screen, one question at a time, with voting open. */
   pollLoop?: boolean;
   /** The speaker's deck (a link), opened with D on the screen laptop and shared on /join when published. */
@@ -60,7 +66,7 @@ export const seedPolls: Poll[] = data.polls;
 
 // ── Slides ────────────────────────────────────────────────────────────────
 // Derived from the agenda. The order here is the order "Next" walks through.
-export type SlideKind = 'holding' | 'anthem' | 'transition' | 'ask' | 'speaker' | 'panel' | 'break' | 'questions' | 'poll';
+export type SlideKind = 'holding' | 'anthem' | 'transition' | 'ask' | 'speaker' | 'panel' | 'break' | 'questions' | 'poll' | 'thanks';
 export type Slide = { id: string; kind: SlideKind; slotId: string | null; name: string };
 
 const perSlot: Record<SlotKind, SlideKind[]> = {
@@ -80,17 +86,30 @@ const slideName: Record<SlideKind, string> = {
   break: 'Break',
   questions: 'Questions',
   poll: 'Poll results',
+  thanks: 'Thank you',
 };
 
 export const slides: Slide[] = agenda.flatMap((slot) => {
   const run: [SlideKind, string][] = [
     ...(slot.anthem ? [['anthem', 'anthem'] as [SlideKind, string]] : []),
     ...(slot.anthem && slot.askAfterAnthem ? [['ask', 'ask-early'] as [SlideKind, string]] : []),
+    ...(slot.presenter ? [['speaker', 'speakers'] as [SlideKind, string]] : []),
     ...perSlot[slot.kind].map((k) => [k, k] as [SlideKind, string]),
     ...(slot.askAfter ? [['ask', 'ask'] as [SlideKind, string]] : []),
+    ...(slot.thanks ? [['thanks', 'thanks'] as [SlideKind, string]] : []),
   ];
   const name = (kind: SlideKind, key: string) =>
-    key === 'ask-early' ? 'Questions (after anthem)' : kind === 'break' && slot.pollLoop ? 'Pulse poll' : slideName[kind];
+    key === 'ask-early'
+      ? 'Questions (after anthem)'
+      : key === 'speakers'
+        ? 'Both speakers'
+        : key === 'speaker' && slot.presenter
+          ? person(slot.presenter).name
+          : key === 'speaker' && slot.signoff === false
+            ? 'Felicitation'
+            : kind === 'break' && slot.pollLoop
+              ? 'Pulse poll'
+              : slideName[kind];
   return run.map(([kind, key]) => ({ id: `${slot.id}:${key}`, kind, slotId: slot.id, name: name(kind, key) }));
 });
 

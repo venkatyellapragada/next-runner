@@ -46,9 +46,9 @@ export type ScreenProps = {
 const GROUND: Partial<Record<SlideKind, string>> = { holding: 'brand on-brand' };
 const range = (s: Slot) => `${s.start}–${s.end}`;
 /** QR codes say what they are for: the poll slide opens the poll, question slides open the form. */
-const withFocus = (joinUrl: string, focus: 'poll' | 'ask') => `${joinUrl}${joinUrl.includes('?') ? '&' : '?'}focus=${focus}`;
+const withFocus = (joinUrl: string, focus: 'poll' | 'ask' | 'feedback') => `${joinUrl}${joinUrl.includes('?') ? '&' : '?'}focus=${focus}`;
 // Slides with their own QR card: the footer drops its QR so there is only ever one, captioned for the slide.
-const OWN_QR: SlideKind[] = ['poll', 'questions', 'ask'];
+const OWN_QR: SlideKind[] = ['poll', 'questions', 'ask', 'thanks'];
 
 /** During registrations the cover and the agenda take turns, 20 s each. */
 export const AGENDA_TURN_MS = 20000;
@@ -185,6 +185,8 @@ function SlideBody(p: ScreenProps) {
       return <Questions {...p} slot={slot} />;
     case 'poll':
       return <Poll {...p} />;
+    case 'thanks':
+      return <Thanks {...p} />;
   }
 }
 
@@ -330,12 +332,12 @@ function Transition({ slot, now, photos, print, state }: ScreenProps & { slot: S
           // The team answering: portraits in a row under the byline.
           <div>
             {slot.byline && <p className="eyebrow" style={{ marginBottom: 20 }}>{slot.byline}</p>}
-            <div style={{ display: 'flex', gap: 40 }}>
+            <div style={{ display: 'flex', gap: ids.length > 3 ? 32 : 40 }}>
               {ids.map((id) => {
                 const s = person(id);
                 return (
-                  <div key={id} style={{ width: 300 }}>
-                    <Avatar id={id} photos={photos} width={180} />
+                  <div key={id} style={{ width: ids.length > 3 ? 250 : 300 }}>
+                    <Avatar id={id} photos={photos} width={ids.length > 3 ? 160 : 180} />
                     <p style={{ margin: '18px 0 0', fontSize: 32, fontWeight: 700, letterSpacing: '-0.015em', lineHeight: 1.1 }}>{s.name}</p>
                     <p className="muted" style={{ margin: '6px 0 0', fontSize: 22, lineHeight: 1.3 }}>{[s.title, s.org].filter(Boolean).join(', ')}</p>
                   </div>
@@ -365,13 +367,14 @@ function Transition({ slot, now, photos, print, state }: ScreenProps & { slot: S
 // ── Speaker ──────────────────────────────────────────────────────────────
 function Speaker(p: ScreenProps & { slot: Slot }) {
   const { slot, photos } = p;
-  const lead = (slot.speakers ?? [])[0];
+  const lead = slot.presenter ?? (slot.speakers ?? [])[0];
   if (!lead) return <Transition {...p} />;
   const s = person(lead);
   const topics = slot.topics ?? [];
   const session = slot.title !== slot.label;
   if (slot.headline && s.photo === false) return <Statement slot={slot} lead={lead} />;
-  if ((slot.speakers ?? []).length > 1) return <SpeakerPair {...p} />;
+  // With a presenter: the first slide shows everyone (key "speakers"), the next the presenter alone.
+  if ((slot.speakers ?? []).length > 1 && (!slot.presenter || p.slide.id.endsWith(':speakers'))) return <SpeakerPair {...p} />;
   return (
     <div className="cols" style={{ gap: 96, alignItems: 'flex-start' }}>
       <Avatar id={lead} photos={photos} width={480} height={600} />
@@ -423,10 +426,14 @@ function Statement({ slot, lead }: { slot: Slot; lead: string }) {
         })}
       </h1>
       <div style={{ marginTop: 'auto', paddingTop: 36, borderTop: '1px solid var(--rule)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 96 }}>
-        <div>
-          <p className="heading" style={{ fontSize: 60 }}>{s.name}</p>
-          <p className="heading muted" style={{ marginTop: 10, fontSize: 36, fontWeight: 500 }}>{[s.title, s.org].filter(Boolean).join(', ')}</p>
-        </div>
+        {slot.signoff === false ? (
+          <p className="heading" style={{ fontSize: 48 }}>{event.name}</p>
+        ) : (
+          <div>
+            <p className="heading" style={{ fontSize: 60 }}>{s.name}</p>
+            <p className="heading muted" style={{ marginTop: 10, fontSize: 36, fontWeight: 500 }}>{[s.title, s.org].filter(Boolean).join(', ')}</p>
+          </div>
+        )}
         <p className="eyebrow" style={{ textAlign: 'right' }}>{event.expansion}</p>
       </div>
     </div>
@@ -438,7 +445,8 @@ const COUNT: Record<number, string> = { 6: 'six', 7: 'seven', 8: 'eight', 9: 'ni
 // Two speakers share the session: both portraits side by side on the left, the session on the right.
 function SpeakerPair({ slot, photos }: ScreenProps & { slot: Slot }) {
   const ids = (slot.speakers ?? []).slice(0, 2);
-  const topics = slot.topics ?? [];
+  // The topics belong to the presenter's own slide, which follows.
+  const topics = slot.presenter ? [] : slot.topics ?? [];
   return (
     <div className="cols" style={{ gap: 96, alignItems: 'flex-start' }}>
       <div style={{ display: 'flex', gap: 32, flex: 'none' }}>
@@ -544,6 +552,29 @@ function Break({ slot, state, now, print }: ScreenProps & { slot: Slot }) {
   );
 }
 
+// ── The last slide: thank you, and the code to the feedback form ─────────
+function Thanks({ joinUrl }: ScreenProps) {
+  return (
+    <div style={{ display: 'flex', gap: 112, alignItems: 'stretch', height: '100%' }}>
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+        <div>
+          <p className="eyebrow accent" style={{ marginBottom: 32 }}>§ {event.name} · 05.11.2026</p>
+          <h1 className="display resolve" style={{ fontSize: 168, lineHeight: 1.04 }}>
+            <span style={{ display: 'block' }}>Thank you.</span>
+            <span style={{ display: 'block', color: 'var(--indigo)' }}>Happy Diwali.</span>
+          </h1>
+        </div>
+        <p className="heading muted" style={{ fontSize: 40, fontWeight: 500, maxWidth: 1000, marginTop: 32 }}>
+          Tell us how the day went: scan the code for the feedback form. It takes two minutes.
+        </p>
+      </div>
+      <div style={{ flex: 'none', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+        <QrPanel joinUrl={withFocus(joinUrl, 'feedback')} line="Scan to give feedback" size={480} />
+      </div>
+    </div>
+  );
+}
+
 function QrPanel({ joinUrl, line, size = 280 }: { joinUrl: string; line: string; size?: number }) {
   return (
     // The code's edges are the panel's edges: flush with the content margin, caption aligned under it.
@@ -606,7 +637,7 @@ function AskPrompt({ joinUrl }: ScreenProps) {
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
         <div>
           <p className="eyebrow accent" style={{ marginBottom: 32 }}>§ {forum ? `${forum.label} · ${forum.start}` : 'Questions from the room'}</p>
-          <h1 className="title resolve" style={{ fontSize: 120 }}>Questions for the Open Forum?</h1>
+          <h1 className="title resolve" style={{ fontSize: 108 }}>Questions for the Campx and Google team?</h1>
         </div>
         <p className="heading muted" style={{ fontSize: 44, fontWeight: 500, maxWidth: 1000 }}>
           Scan the code and send yours now{forum ? `. We take them in the Open Forum at ${forum.start}.` : '.'}

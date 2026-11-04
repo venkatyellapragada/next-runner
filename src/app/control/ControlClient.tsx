@@ -142,7 +142,7 @@ function Console({ pin, health, photos, onLock }: { pin: string; health: Health;
           <span className="ctl-eyebrow">On screen</span>
           {onScreenLine}
           {state.notice.trim() && <span className="ctl-flag">Notice up</span>}
-          {state.focus && <span className="ctl-focus">Phones: {state.focus === 'poll' ? 'poll' : 'ask'}</span>}
+          {state.focus && <span className="ctl-focus">Phones: {state.focus}</span>}
         </p>
         <div className="ctl-nav">
           <button className="btn" disabled={busy} onClick={() => send({ type: 'prev' })}>Previous</button>
@@ -183,7 +183,7 @@ function Console({ pin, health, photos, onLock }: { pin: string; health: Health;
           <button className={`btn ${state.slideId === 'questions' ? 'on' : ''}`} onClick={() => send({ type: 'show', slideId: 'questions' })}>Questions</button>
           <button className={`btn ${state.slideId === 'ask' ? 'on' : ''}`} onClick={() => send({ type: 'show', slideId: 'ask' })}>Question prompt</button>
           <button className={`btn ${state.feedbackOpen ? 'on' : ''}`} onClick={() => send({ type: 'feedback', open: !state.feedbackOpen })}>
-            {state.feedbackOpen ? 'Close feedback' : 'Open feedback'}
+            {state.feedbackOpen ? 'Stop feedback reminder' : 'Remind feedback'}
           </button>
           {state.returnTo && <button className="btn primary" onClick={() => send({ type: 'back' })}>Back to agenda</button>}
         </div>
@@ -260,9 +260,9 @@ function Console({ pin, health, photos, onLock }: { pin: string; health: Health;
             </button>
           </Section>
           <Section title="Feedback form">
-            <p className="ctl-muted">Opening it (also above, under the screen) puts the form at the top of the audience page. It is always reachable from there.</p>
+            <p className="ctl-muted">The form is always open on the audience page (Feedback tab). <b>Remind feedback</b> (also under the screen) puts it at the top of everyone's phone; the closing <i>Thank you</i> slide sends phones to it too.</p>
             <button className={`btn ${state.feedbackOpen ? 'on' : ''}`} onClick={() => send({ type: 'feedback', open: !state.feedbackOpen })}>
-              {state.feedbackOpen ? 'Feedback is open: close' : 'Open feedback now'}
+              {state.feedbackOpen ? 'Stop feedback reminder' : 'Remind feedback'}
             </button>
           </Section>
           <ContentCheck photos={photos} />

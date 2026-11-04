@@ -33,10 +33,11 @@ export default function JoinClient({ photos }: { photos: Record<string, string> 
   // Deep links work on first load: ?focus=poll|ask and #now|#agenda|#ask|#feedback.
   useEffect(() => {
     const q = new URLSearchParams(location.search).get('focus');
-    const f: Focus = q === 'poll' || q === 'ask' ? q : null;
+    const f: Focus = q === 'poll' || q === 'ask' || q === 'feedback' ? q : null;
     setAskedFor(f);
     const h = location.hash.slice(1) as Tab;
     if (f === 'ask') setTab('ask');
+    else if (f === 'feedback') setTab('feedback');
     else if (f === 'poll') setTab('now');
     else if (TABS.some(([t]) => t === h)) {
       setTab(h);
@@ -60,6 +61,7 @@ export default function JoinClient({ photos }: { photos: Record<string, string> 
     } else setAskedFor(null);
     if (serverFocus === 'ask') setTab('ask');
     if (serverFocus === 'poll') setTab('now');
+    if (serverFocus === 'feedback') setTab('feedback');
   }, [state, serverFocus]);
 
   const go = (t: Tab) => {

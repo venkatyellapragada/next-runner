@@ -4,7 +4,7 @@ import { clockSlot, FIRST_SLIDE, isPollLoop, slideById, slideIndex, slides, slot
 
 export type Overlay = 'video' | 'anthem' | 'sim' | null;
 /** What the room is being asked to do on /join; set by control actions, cleared by moving on. */
-export type Focus = 'poll' | 'ask' | null;
+export type Focus = 'poll' | 'ask' | 'feedback' | null;
 export type ShownQuestion = { id: string; text: string; name?: string; role?: string; org?: string };
 export type LiveState = {
   v: number;
@@ -74,7 +74,7 @@ function withFocus(prev: LiveState, next: LiveState, a: Action): LiveState {
   const kind = slideById(next.slideId)?.kind;
   let focus = prev.focus;
   if (a.type === 'poll') focus = a.open ? 'poll' : kind === 'poll' ? 'poll' : null;
-  else if (next.slideId !== prev.slideId || a.type === 'show' || a.type === 'go') focus = kind === 'poll' || isPollLoop(next.slideId) ? 'poll' : kind === 'questions' || kind === 'ask' ? 'ask' : null;
+  else if (next.slideId !== prev.slideId || a.type === 'show' || a.type === 'go') focus = kind === 'poll' || isPollLoop(next.slideId) ? 'poll' : kind === 'questions' || kind === 'ask' ? 'ask' : kind === 'thanks' ? 'feedback' : null;
   if (a.type === 'reset') focus = null;
   return focus === next.focus ? next : { ...next, focus };
 }

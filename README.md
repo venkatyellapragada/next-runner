@@ -43,7 +43,7 @@ Day-of instructions: **RUNBOOK.md**. Look and feel: **DESIGN.md**.
 Slides are derived from the agenda: one *speaker* slide per talk (a *Starts in* chip until the start
 time), one *panel* slide, a *break* slide per break (lunch shows the poll results wall), a *holding* slide
 for registration (alternating with the agenda every 20 s), the Open Forum a *transition*. `anthem: true`
-adds the *Please rise* slide; `askAfterAnthem` / `askAfter` add a *Questions for the Open Forum?* slide.
+adds the *Please rise* slide; `presenter` gives a session with two speakers a slide with both and then one with the presenter; `thanks` ends the slot with the *Thank you* slide (QR to feedback); `signoff: false` drops the speaker's name from a headline slide; `askAfterAnthem` / `askAfter` add a *Questions for the Open Forum?* slide.
 *Poll results*, *questions* and the *question prompt* can be put on screen at any time from /control and
 return to where you were.
 
