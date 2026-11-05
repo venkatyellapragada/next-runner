@@ -75,46 +75,41 @@
       "speakers": ["ravikiran-pothineni"], "topics": []
     },
     {
-      "id": "google", "start": "14:15", "end": "15:00", "kind": "talk",
+      "id": "google", "start": "14:15", "end": "15:15", "kind": "talk",
       "label": "Google Keynote", "title": "DCGC 4.0",
       "subtitle": "Digital Campus on Google Cloud",
       "speakers": ["surya-nigam"],
       "topics": ["Get Agentic AI ready", "World-class curriculum on Google Skills", "Globally recognised credentials", "Careers in AI and cloud"]
     },
     {
-      "id": "keynote-2", "start": "15:00", "end": "15:20", "kind": "talk",
-      "label": "Campx Keynote 2", "title": "Next Generation Accreditations Management",
-      "deck": { "title": "Next Generation Accreditation", "url": "https://claude.ai/artifact/1dmjKSZRKJkGVAuzk8t3H4?sk=4C1ICv2omuxDGnYIz6hBlQ" },
-      "speakers": ["bala-nagendra-prasad"],
-      "topics": ["Data-driven accreditation", "One connected record", "Evidence that collects itself", "Ready before the visit", "AI with people in control"]
+      "id": "keynote-4", "start": "15:15", "end": "15:45", "kind": "talk",
+      "label": "Campx Keynote 4", "title": "Building Education Infrastructure for the Country",
+      "speakers": ["venkat-yellapragada"], "topics": [],
+      "deck": { "title": "Building Education Infrastructure for the Country", "url": "https://claude.ai/artifact/VFtPLzZNe21EZFbQfQn9Pi" }
     },
     {
-      "id": "keynote-3", "start": "15:20", "end": "15:50", "kind": "talk",
-      "askAfter": true,
+      "id": "keynote-3", "start": "15:45", "end": "16:15", "kind": "talk",
       "label": "Campx Keynote 3", "title": "Unified AI Driven Campus Operations",
       "deck": { "title": "Unified AI Driven Campus Operations", "url": "https://claude.ai/artifact/DXsuBLZCWvovE8Gv9Jt7x5?sk=IOmrVbsD1mLwAv7oULnk3w" },
       "speakers": ["ketansrisai-kondabathula"],
       "topics": ["Every campus process on one platform", "One command centre for leadership", "Medha across every function", "The first 100 days"]
     },
     {
-      "id": "open-forum", "start": "15:50", "end": "16:00", "kind": "forum",
-      "label": "Open Forum", "title": "Answers",
-      "byline": "Campx leadership and Google team", "speakers": ["venkat-yellapragada", "srikanth-yellapragada", "ketansrisai-kondabathula", "siddharth-dalwadi"]
+      "id": "keynote-2", "start": "16:15", "end": "16:45", "kind": "talk",
+      "askAfter": true,
+      "label": "Campx Keynote 2", "title": "Next Generation Accreditations Management",
+      "deck": { "title": "Next Generation Accreditation", "url": "https://claude.ai/artifact/1dmjKSZRKJkGVAuzk8t3H4?sk=4C1ICv2omuxDGnYIz6hBlQ" },
+      "speakers": ["bala-nagendra-prasad"],
+      "topics": ["Data-driven accreditation", "One connected record", "Evidence that collects itself", "Ready before the visit", "AI with people in control"]
     },
     {
-      "id": "high-tea", "start": "16:00", "end": "16:20", "kind": "break",
-      "label": "High Tea", "title": "High Tea", "subtitle": "We resume at 16:20 with Campx Keynote 4."
+      "id": "high-tea", "start": "16:45", "end": "17:00", "kind": "break",
+      "label": "High Tea", "title": "High Tea", "subtitle": "We resume at 17:00 with the closing note and questions."
     },
     {
-      "id": "keynote-4", "start": "16:20", "end": "17:00", "kind": "talk",
-      "label": "Campx Keynote 4", "title": "Building Education Infrastructure for the Country",
-      "speakers": ["venkat-yellapragada"], "topics": [],
-      "deck": { "title": "Building Education Infrastructure for the Country", "url": "https://claude.ai/artifact/VFtPLzZNe21EZFbQfQn9Pi" }
-    },
-    {
-      "id": "closing", "start": "17:10", "end": "18:00", "kind": "talk",
-      "label": "Closing Note and Felicitation", "title": "Closing Note and Felicitation",
-      "headline": "Closing Note\nand Felicitation.", "signoff": false, "thanks": true,
+      "id": "closing", "start": "17:00", "end": "17:30", "kind": "talk",
+      "label": "Closing Note and Questions", "title": "Closing Note and Questions",
+      "headline": "Closing Note\nand Questions.", "signoff": false, "thanks": true,
       "speakers": ["manasa-krishna"], "topics": []
     }
   ],
