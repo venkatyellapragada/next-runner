@@ -326,7 +326,7 @@ function Transition({ slot, now, photos, print, state }: ScreenProps & { slot: S
           <div>
             <p className="eyebrow" style={{ marginBottom: 20 }}>Moderator</p>
             <PersonLine id={slot.moderator} photos={photos} size={100} />
-            <p className="body muted" style={{ marginTop: 20, fontSize: 30 }}>With {COUNT[(slot.speakers ?? []).length] ?? (slot.speakers ?? []).length} university leaders from across India</p>
+            <p className="body muted" style={{ marginTop: 20, fontSize: 30 }}>With {COUNT[(slot.speakers ?? []).length] ?? (slot.speakers ?? []).length} education leaders from across India</p>
           </div>
         ) : slot.kind === 'forum' && ids.length ? (
           // The team answering: portraits in a row under the byline.

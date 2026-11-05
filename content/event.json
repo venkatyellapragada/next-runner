@@ -19,7 +19,7 @@
     "pardha-saradhi-varma": { "name": "G. Pardha Saradhi Varma", "title": "Vice Chancellor", "org": "KL Deemed to be University", "bio": "" },
     "archana-mantri": { "name": "Dr. Archana Mantri", "title": "Vice Chancellor", "org": "Anurag University", "bio": "" },
     "chandra-sekhar": { "name": "Dr. U. Chandra Sekhar", "title": "Vice Chancellor", "org": "Godavari Global University", "bio": "" },
-    "vsk-reddy": { "name": "Dr. V. S. K. Reddy", "title": "Vice Chancellor", "org": "Malla Reddy University", "bio": "" },
+    "rama-krishna-reddy": { "name": "Rama Krishna Reddy", "title": "CEO", "org": "Gaudium School", "bio": "" },
     "guda-sridevi": { "name": "Prof. (Dr.) Guda Sridevi", "title": "Pro Vice Chancellor", "org": "C. V. Raman Global University, Odisha", "bio": "" },
     "kl-narayana": { "name": "Prof. K. L. Narayana", "title": "Director, IcfaiTech", "org": "IFHE Hyderabad", "bio": "" },
     "ravi-kumar-jain": { "name": "Dr. Ravi Kumar Jain", "title": "Ex Vice Chancellor, IILM University, Gurugram", "org": "Educationist", "bio": "" },
@@ -60,7 +60,7 @@
       "label": "Leadership Panel", "title": "Leading with AI, Anchored in Values",
       "subtitle": "What Changes, What Must Not",
       "moderator": "venkat-yellapragada",
-      "speakers": ["a-damodaram", "vsk-reddy", "pardha-saradhi-varma", "archana-mantri", "chandra-sekhar", "guda-sridevi", "kl-narayana", "ravi-kumar-jain", "hps-dhami"]
+      "speakers": ["a-damodaram", "rama-krishna-reddy", "pardha-saradhi-varma", "archana-mantri", "chandra-sekhar", "guda-sridevi", "kl-narayana", "ravi-kumar-jain", "hps-dhami"]
     },
     {
       "id": "short-break", "start": "12:20", "end": "12:30", "kind": "break",

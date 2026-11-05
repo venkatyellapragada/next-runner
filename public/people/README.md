@@ -15,7 +15,7 @@ A person with `"photo": false` in content/event.json (Manasa Krishna) is shown w
 | `pardha-saradhi-varma.jpg` | G. Pardha Saradhi Varma |
 | `archana-mantri.jpg` | Dr. Archana Mantri |
 | `chandra-sekhar.jpg` | Dr. U. Chandra Sekhar |
-| `vsk-reddy.jpg` | Dr. V. S. K. Reddy |
+| `rama-krishna-reddy.jpg` | Rama Krishna Reddy |
 | `guda-sridevi.jpg` | Prof. (Dr.) Guda Sridevi |
 | `kl-narayana.jpg` | Prof. K. L. Narayana |
 | `ravi-kumar-jain.jpg` | Dr. Ravi Kumar Jain |
