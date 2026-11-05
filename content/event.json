@@ -89,7 +89,7 @@
       "id": "google", "start": "14:15", "end": "14:45", "kind": "talk",
       "label": "Google Keynote", "title": "DCGC 4.0",
       "subtitle": "Digital Campus on Google Cloud",
-      "speakers": ["siddharth-dalwadi", "surya-nigam"], "presenter": "surya-nigam",
+      "speakers": ["surya-nigam"],
       "topics": ["Get Agentic AI ready", "World-class curriculum on Google Skills", "Globally recognised credentials", "Careers in AI and cloud"]
     },
     {
