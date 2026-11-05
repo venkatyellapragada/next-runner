@@ -56,31 +56,20 @@
       "topics": ["AI Assisted Digital Evaluation", "Tablet-based Examinations", "AI Content Studio", "Learning Management System"]
     },
     {
-      "id": "panel", "start": "11:30", "end": "12:20", "kind": "panel",
+      "id": "panel", "start": "11:30", "end": "13:05", "kind": "panel",
       "label": "Leadership Panel", "title": "Leading with AI, Anchored in Values",
       "subtitle": "What Changes, What Must Not",
       "moderator": "venkat-yellapragada",
       "speakers": ["a-damodaram", "pardha-saradhi-varma", "archana-mantri", "chandra-sekhar", "guda-sridevi", "kl-narayana", "ravi-kumar-jain", "hps-dhami", "rama-krishna-reddy"]
     },
     {
-      "id": "short-break", "start": "12:20", "end": "12:30", "kind": "break",
-      "label": "Short Break", "title": "Short Break", "subtitle": "We resume at 12:30 with Campx Keynote 2."
-    },
-    {
-      "id": "keynote-2", "start": "12:30", "end": "13:00", "kind": "talk",
-      "label": "Campx Keynote 2", "title": "Next Generation Accreditations Management",
-      "deck": { "title": "Next Generation Accreditation", "url": "https://claude.ai/artifact/1dmjKSZRKJkGVAuzk8t3H4?sk=4C1ICv2omuxDGnYIz6hBlQ" },
-      "speakers": ["bala-nagendra-prasad"],
-      "topics": ["Data-driven accreditation", "One connected record", "Evidence that collects itself", "Ready before the visit", "AI with people in control"]
-    },
-    {
-      "id": "winnify", "start": "13:00", "end": "13:15", "kind": "talk",
+      "id": "winnify", "start": "13:05", "end": "13:20", "kind": "talk",
       "label": "Partner session", "title": "Communication Intelligence Platform",
       "subtitle": "Winnify, Campx Partner",
       "speakers": ["ravikiran-pothineni"], "topics": []
     },
     {
-      "id": "lunch", "start": "13:15", "end": "14:00", "kind": "break",
+      "id": "lunch", "start": "13:20", "end": "14:15", "kind": "break",
       "pollLoop": true,
       "askAfter": true,
       "label": "Lunch", "title": "Lunch", "subtitle": "We resume at 14:15 with the Google keynote."
@@ -93,7 +82,14 @@
       "topics": ["Get Agentic AI ready", "World-class curriculum on Google Skills", "Globally recognised credentials", "Careers in AI and cloud"]
     },
     {
-      "id": "keynote-3", "start": "14:50", "end": "15:20", "kind": "talk",
+      "id": "keynote-2", "start": "14:45", "end": "15:15", "kind": "talk",
+      "label": "Campx Keynote 2", "title": "Next Generation Accreditations Management",
+      "deck": { "title": "Next Generation Accreditation", "url": "https://claude.ai/artifact/1dmjKSZRKJkGVAuzk8t3H4?sk=4C1ICv2omuxDGnYIz6hBlQ" },
+      "speakers": ["bala-nagendra-prasad"],
+      "topics": ["Data-driven accreditation", "One connected record", "Evidence that collects itself", "Ready before the visit", "AI with people in control"]
+    },
+    {
+      "id": "keynote-3", "start": "15:15", "end": "15:45", "kind": "talk",
       "askAfter": true,
       "label": "Campx Keynote 3", "title": "Unified AI Driven Campus Operations",
       "deck": { "title": "Unified AI Driven Campus Operations", "url": "https://claude.ai/artifact/DXsuBLZCWvovE8Gv9Jt7x5?sk=IOmrVbsD1mLwAv7oULnk3w" },
@@ -101,12 +97,12 @@
       "topics": ["Every campus process on one platform", "One command centre for leadership", "Medha across every function", "The first 100 days"]
     },
     {
-      "id": "open-forum", "start": "15:30", "end": "16:00", "kind": "forum",
+      "id": "open-forum", "start": "15:45", "end": "16:00", "kind": "forum",
       "label": "Open Forum", "title": "Answers",
       "byline": "Campx leadership and Google team", "speakers": ["venkat-yellapragada", "srikanth-yellapragada", "ketansrisai-kondabathula", "siddharth-dalwadi"]
     },
     {
-      "id": "high-tea", "start": "16:00", "end": "16:15", "kind": "break",
+      "id": "high-tea", "start": "16:00", "end": "16:20", "kind": "break",
       "label": "High Tea", "title": "High Tea", "subtitle": "We resume at 16:20 with Campx Keynote 4."
     },
     {
