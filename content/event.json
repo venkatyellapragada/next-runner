@@ -75,21 +75,21 @@
       "speakers": ["ravikiran-pothineni"], "topics": []
     },
     {
-      "id": "google", "start": "14:15", "end": "14:45", "kind": "talk",
+      "id": "google", "start": "14:15", "end": "15:00", "kind": "talk",
       "label": "Google Keynote", "title": "DCGC 4.0",
       "subtitle": "Digital Campus on Google Cloud",
       "speakers": ["surya-nigam"],
       "topics": ["Get Agentic AI ready", "World-class curriculum on Google Skills", "Globally recognised credentials", "Careers in AI and cloud"]
     },
     {
-      "id": "keynote-2", "start": "14:45", "end": "15:15", "kind": "talk",
+      "id": "keynote-2", "start": "15:00", "end": "15:20", "kind": "talk",
       "label": "Campx Keynote 2", "title": "Next Generation Accreditations Management",
       "deck": { "title": "Next Generation Accreditation", "url": "https://claude.ai/artifact/1dmjKSZRKJkGVAuzk8t3H4?sk=4C1ICv2omuxDGnYIz6hBlQ" },
       "speakers": ["bala-nagendra-prasad"],
       "topics": ["Data-driven accreditation", "One connected record", "Evidence that collects itself", "Ready before the visit", "AI with people in control"]
     },
     {
-      "id": "keynote-3", "start": "15:15", "end": "15:45", "kind": "talk",
+      "id": "keynote-3", "start": "15:20", "end": "15:50", "kind": "talk",
       "askAfter": true,
       "label": "Campx Keynote 3", "title": "Unified AI Driven Campus Operations",
       "deck": { "title": "Unified AI Driven Campus Operations", "url": "https://claude.ai/artifact/DXsuBLZCWvovE8Gv9Jt7x5?sk=IOmrVbsD1mLwAv7oULnk3w" },
@@ -97,7 +97,7 @@
       "topics": ["Every campus process on one platform", "One command centre for leadership", "Medha across every function", "The first 100 days"]
     },
     {
-      "id": "open-forum", "start": "15:45", "end": "16:00", "kind": "forum",
+      "id": "open-forum", "start": "15:50", "end": "16:00", "kind": "forum",
       "label": "Open Forum", "title": "Answers",
       "byline": "Campx leadership and Google team", "speakers": ["venkat-yellapragada", "srikanth-yellapragada", "ketansrisai-kondabathula", "siddharth-dalwadi"]
     },
