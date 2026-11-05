@@ -63,16 +63,16 @@
       "speakers": ["a-damodaram", "pardha-saradhi-varma", "archana-mantri", "chandra-sekhar", "guda-sridevi", "kl-narayana", "ravi-kumar-jain", "hps-dhami", "rama-krishna-reddy"]
     },
     {
-      "id": "winnify", "start": "13:05", "end": "13:20", "kind": "talk",
+      "id": "lunch", "start": "13:05", "end": "14:00", "kind": "break",
+      "pollLoop": true,
+      "askAfter": true,
+      "label": "Lunch", "title": "Lunch", "subtitle": "We resume at 14:00 with the partner session."
+    },
+    {
+      "id": "winnify", "start": "14:00", "end": "14:15", "kind": "talk",
       "label": "Partner session", "title": "Communication Intelligence Platform",
       "subtitle": "Winnify, Campx Partner",
       "speakers": ["ravikiran-pothineni"], "topics": []
-    },
-    {
-      "id": "lunch", "start": "13:20", "end": "14:15", "kind": "break",
-      "pollLoop": true,
-      "askAfter": true,
-      "label": "Lunch", "title": "Lunch", "subtitle": "We resume at 14:15 with the Google keynote."
     },
     {
       "id": "google", "start": "14:15", "end": "14:45", "kind": "talk",
