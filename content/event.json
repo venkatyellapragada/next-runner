@@ -60,7 +60,7 @@
       "label": "Leadership Panel", "title": "Leading with AI, Anchored in Values",
       "subtitle": "What Changes, What Must Not",
       "moderator": "venkat-yellapragada",
-      "speakers": ["a-damodaram", "rama-krishna-reddy", "pardha-saradhi-varma", "archana-mantri", "chandra-sekhar", "guda-sridevi", "kl-narayana", "ravi-kumar-jain", "hps-dhami"]
+      "speakers": ["a-damodaram", "pardha-saradhi-varma", "archana-mantri", "chandra-sekhar", "guda-sridevi", "kl-narayana", "ravi-kumar-jain", "hps-dhami", "rama-krishna-reddy"]
     },
     {
       "id": "short-break", "start": "12:20", "end": "12:30", "kind": "break",
